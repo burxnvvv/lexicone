@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Lexicon">
+<meta name="theme-color" content="#10131A">
+<title>Lexicon</title>
+<style>
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body {
+    margin: 0; padding: 0;
+    background: #10131A;
+    color: #EDEAE0;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    min-height: 100vh;
+  }
+  .serif { font-family: Georgia, 'Times New Roman', serif; }
+
+  #app { max-width: 1080px; margin: 0 auto; padding: 28px 20px 70px; }
+
+  header { margin-bottom: 22px; }
+  h1.serif {
+    font-size: 34px; font-weight: 400; margin: 0; letter-spacing: 0.2px;
+    color: #F2EFE6;
+  }
+  .pron { font-size: 13px; color: #6C7280; margin: 4px 0 0; font-style: italic; }
+  .pron b { color: #E3A857; font-style: normal; font-weight: 600; }
+
+  .stats-row { display: flex; gap: 18px; margin-top: 14px; flex-wrap: wrap; }
+  .stat { background: #171B24; border: 1px solid #232838; border-radius: 10px; padding: 8px 14px; font-size: 13px; color: #9096A6; }
+  .stat b { color: #E3A857; font-size: 15px; }
+
+  .panels { display: grid; grid-template-columns: 1fr; gap: 14px; margin: 22px 0 8px; }
+  @media (min-width: 760px) {
+    .panels { grid-template-columns: 1fr 1fr; align-items: start; }
+  }
+
+  .panel { background: #171B24; border: 1px solid #232838; border-radius: 14px; padding: 16px 18px; }
+  .panel-label { font-size: 11px; text-transform: uppercase; letter-spacing: 1.2px; color: #6C7280; margin: 0 0 10px; }
+
+  input[type=text], textarea {
+    width: 100%;
+    background: #10131A;
+    border: 1px solid #262C3D;
+    border-radius: 9px;
+    color: #EDEAE0;
+    padding: 10px 13px;
+    font-size: 15px;
+    outline: none;
+    font-family: inherit;
+  }
+  input[type=text]:focus, textarea:focus { border-color: #E3A857; }
+  textarea { resize: vertical; min-height: 64px; line-height: 1.45; margin-top: 10px; }
+
+  .row { display: flex; gap: 8px; }
+  .row input { flex: 1; }
+
+  button { font-family: inherit; cursor: pointer; }
+  .btn-primary {
+    background: #E3A857; color: #1A1408; border: none;
+    border-radius: 9px; padding: 10px 16px; font-size: 14px; font-weight: 600;
+    white-space: nowrap;
+  }
+  .btn-primary:active { opacity: 0.85; }
+  .btn-primary:disabled { opacity: 0.4; }
+  .btn-ghost {
+    background: transparent; color: #4FB3A5; border: 1px solid #274B45;
+    border-radius: 9px; padding: 9px 14px; font-size: 13px; margin-top: 10px; width: 100%;
+  }
+  .lookup-msg { font-size: 12px; margin-top: 8px; min-height: 16px; }
+  .lookup-msg.ok { color: #4FB3A5; }
+  .lookup-msg.err { color: #C97B63; }
+  .spin {
+    display: inline-block; width: 12px; height: 12px; border: 2px solid #4FB3A5;
+    border-top-color: transparent; border-radius: 50%; animation: sp 0.7s linear infinite;
+    vertical-align: -2px; margin-right: 6px;
+  }
+  @keyframes sp { to { transform: rotate(360deg); } }
+
+  .index-nav {
+    display: flex; gap: 6px; overflow-x: auto; padding: 4px 0 14px;
+    position: sticky; top: 0; background: #10131A; z-index: 5; margin-top: 8px;
+  }
+  .index-nav a {
+    flex-shrink: 0; text-decoration: none; color: #6C7280; font-size: 12px;
+    width: 24px; height: 24px; display: flex; align-items: center; justify-content: center;
+    border-radius: 6px; border: 1px solid #232838;
+  }
+  .index-nav a.has { color: #E3A857; border-color: #3A3320; }
+
+  .grid { display: grid; grid-template-columns: 1fr; gap: 10px; }
+  @media (min-width: 640px) {
+    .grid { grid-template-columns: 1fr 1fr; }
+  }
+  @media (min-width: 1000px) {
+    .grid { grid-template-columns: 1fr 1fr 1fr; }
+  }
+
+  .letter-head {
+    font-size: 12px; color: #E3A857;
+    letter-spacing: 1.5px; margin: 22px 2px 8px;
+    font-weight: 600; text-transform: uppercase;
+    grid-column: 1 / -1;
+    scroll-margin-top: 46px;
+  }
+
+  .card {
+    background: #171B24;
+    border: 1px solid #232838;
+    border-left: 3px solid #E3A857;
+    border-radius: 10px;
+    padding: 13px 15px;
+    position: relative;
+  }
+  .card-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; }
+  .word { font-size: 17px; color: #F1D9AE; margin: 0; }
+  .def { font-size: 14px; color: #C7CAD3; margin: 5px 0 0; line-height: 1.5; }
+  .del-btn {
+    background: none; border: none; color: #454B5C;
+    font-size: 18px; line-height: 1; padding: 2px 4px; flex-shrink: 0;
+  }
+  .del-btn:active { color: #C97B63; }
+
+  .empty { text-align: center; color: #6C7280; font-size: 14px; padding: 40px 10px; grid-column: 1 / -1; }
+</style>
+</head>
+<body>
+<div id="app">
+  <header>
+    <h1 class="serif">Lexicon</h1>
+    <p class="pron"><b>/ˈlɛksɪkɒn/</b> &mdash; the words you're building your English on</p>
+    <div class="stats-row">
+      <div class="stat"><b id="countNum">0</b> words</div>
+      <div class="stat"><b id="letterNum">0</b> letters covered</div>
+    </div>
+  </header>
+
+  <div class="panels">
+    <div class="panel">
+      <p class="panel-label">Search</p>
+      <input type="text" id="searchInput" placeholder="Search a word or a definition...">
+    </div>
+
+    <div class="panel">
+      <p class="panel-label">Add a word</p>
+      <input type="text" id="newWord" placeholder="e.g. plausible">
+      <div class="lookup-msg" id="lookupMsg"></div>
+      <textarea id="newDef" placeholder="Type the English definition here"></textarea>
+      <button class="btn-ghost" id="saveBtn">Save word</button>
+    </div>
+  </div>
+
+  <div class="index-nav" id="indexNav"></div>
+
+  <div class="grid" id="list"></div>
+</div>
+
+<script>
+const STORAGE_KEY = 'lexicon-words';
+const ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
+
+const DEFAULT_WORDS = [
+["Upon","(formal) on, or immediately after something happens."],
+["Champagne","A sparkling white wine from France, traditionally served to celebrate."],
+["One year ahead","A full year before something is due to happen."],
+["Altitude","The height of a place or object above sea level."],
+["Fair enough","Used to show you accept what someone said, even if you don't fully agree."],
+["Changing hues","Shades of colour that shift or vary gradually."],
+["Multiple layers","Several distinct levels stacked or placed on top of one another."],
+["Helmet","A hard protective covering worn on the head."],
+["Guardian","A person who protects, looks after, or is legally responsible for someone."],
+["Hip","The joint connecting the leg to the body, at the side of the pelvis."],
+["Unassisted","Done without any help from another person or device."],
+["Knees bent","With the knees folded rather than kept straight."],
+["Host nation","The country that organises and holds an international event."],
+["Aimed at","Intended or designed to reach or affect a particular group or goal."],
+["Subsidies","Money given by a government or organisation to support an industry or lower costs."],
+["Bulk of the revenue","The largest part of the total income."],
+["Term time","The period of the year when school or university classes are in session."],
+["Right fork","The right-hand branch of a road or path where it divides in two."],
+["Further on","At a later point in distance or time; ahead."],
+["Junction","A point where two or more roads, railways, or paths meet."],
+["Old teaching styles","Traditional methods of teaching that were common in the past."],
+["Endeavours","Serious attempts or efforts made to achieve something difficult."],
+["Subject matter","The topic or content that a piece of writing or discussion is about."],
+["Accustomed to","Familiar with something because you have experienced it many times."],
+["Software","Computer programs and the instructions that run them."],
+["Showcase","An event or display designed to present something in its best light."],
+["Sceptical sources","Sources of information that express doubt about a claim's truth."],
+["Nurtures","Cares for and helps something grow or develop over time."],
+["Ticking","Making a series of short, regular clicking sounds, like a clock."],
+["Condition","The state something is currently in, or a requirement that must be met."],
+["To get around (a rule)","To find a clever way of avoiding a rule or restriction."],
+["Turns out","Is eventually discovered or proven to be the case."],
+["Conveyed","Communicated or expressed a feeling, idea, or piece of information."],
+["Severe","Very serious, extreme, or intense in degree."],
+["Blames","Holds someone or something responsible for a fault or problem."],
+["Plausible","Seeming reasonable or likely to be true."],
+["Hunting-driven","Caused mainly or primarily by hunting activity."],
+["Empirical evidence","Evidence gathered through observation or experiment, rather than theory alone."],
+["Split apart","Divided or broken into separate pieces."],
+["Embedded","Fixed firmly and deeply into a surrounding substance or system."],
+["Terrain","The physical features of an area of land, such as hills or rivers."],
+["Correspondingly","In a way that matches or relates directly to something else mentioned."],
+["Vast range","An extremely wide variety of things."],
+["Rather unlikely","Not very probable; improbable."],
+["Determined","Having made a firm decision and showing strong will to achieve it."],
+["Gestation period","The length of time an animal carries its young before birth."],
+["Reveal","To make known something that was previously hidden or secret."],
+["Ramp","A sloped surface that connects two different levels."],
+["Rate","The speed at which something happens, or a measured price or level."],
+["Unforeseen","Not expected or predicted before it happened."],
+["Amusement","A feeling of light-hearted enjoyment or entertainment."],
+["Formulate profiles","To create detailed descriptions of a person's typical characteristics."],
+["Alternative","Another possible option or choice, different from the current one."],
+["Off-peak times","Periods when demand, use, or prices are lower than usual."],
+["Booklet","A small, thin book, often containing information or instructions."],
+["Sensible","Showing good, practical judgement; reasonable."],
+["Blend","A mixture formed by combining different things smoothly together."],
+["Blanket (adjective)","Applying to every case, without exception."],
+["Sampling","Taking a small representative part of something to test or analyse the whole."],
+["Forensic","Relating to scientific methods used in the investigation of crime."],
+["Suspect","A person who is thought to be guilty of a crime."],
+["Fitting up","Deliberately making an innocent person appear guilty of a crime."],
+["Landmass","A large, continuous area of land."],
+["Archery","The sport or skill of shooting arrows using a bow."],
+["Foodstuffs","Substances used as food."],
+["Grinding","Crushing something into small particles or powder."],
+["Flat","Level and smooth, without hills or bumps."],
+["Relict","Something that has survived, largely unchanged, from an earlier time."],
+["Rage","Violent, uncontrollable anger."],
+["Scenic","Having beautiful natural scenery, pleasant to look at."],
+["Transmitted","Sent, passed on, or spread from one place, person, or thing to another."],
+["Circuits","Closed paths that an electric current can flow around, or a series of connected stages."],
+["Confined","Kept within strict limits, or restricted to a small space."],
+["Suppress","To stop, hold back, or prevent something from being expressed or noticed."],
+["Phenomenon","A fact, event, or occurrence, especially one that is unusual or notable."],
+["Executive","A senior manager responsible for running a business or organisation."],
+["Allocate","To give a share of a resource for a particular purpose."],
+["Assign","To give someone a specific task, role, or responsibility."]
+];
+
+let words = [];
+
+function uid() {
+  return Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+}
+
+async function loadWords() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) {
+      words = JSON.parse(raw);
+    } else {
+      words = DEFAULT_WORDS.map(([w, d]) => ({ id: uid(), word: w, def: d }));
+      persist();
+    }
+  } catch (e) {
+    words = DEFAULT_WORDS.map(([w, d]) => ({ id: uid(), word: w, def: d }));
+    try { persist(); } catch (e2) {}
+  }
+  render();
+}
+
+function persist() {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(words));
+  } catch (e) {
+    console.error('Storage error', e);
+  }
+}
+
+function escapeHtml(str) {
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
+
+function render(filter) {
+  const list = document.getElementById('list');
+  const q = (filter || '').trim().toLowerCase();
+  let filtered = words;
+  if (q) {
+    filtered = words.filter(w =>
+      w.word.toLowerCase().includes(q) || w.def.toLowerCase().includes(q)
+    );
+  }
+
+  const lettersPresent = new Set(words.map(w => w.word.charAt(0).toUpperCase()));
+  document.getElementById('countNum').textContent = words.length;
+  document.getElementById('letterNum').textContent = lettersPresent.size;
+
+  const nav = document.getElementById('indexNav');
+  nav.innerHTML = ALPHABET.map(l =>
+    '<a href="#letter-' + l + '" class="' + (lettersPresent.has(l) ? 'has' : '') + '">' + l + '</a>'
+  ).join('');
+  nav.style.display = q ? 'none' : 'flex';
+
+  if (filtered.length === 0) {
+    list.innerHTML = '<div class="empty">' + (q ? 'No matches. Try a different search.' : 'No words yet. Add your first one above.') + '</div>';
+    return;
+  }
+
+  const sorted = [...filtered].sort((a, b) => a.word.localeCompare(b.word));
+  let html = '';
+  let lastLetter = '';
+  sorted.forEach(item => {
+    const letter = item.word.charAt(0).toUpperCase();
+    if (!q && letter !== lastLetter) {
+      html += '<div class="letter-head" id="letter-' + letter + '">' + letter + '</div>';
+      lastLetter = letter;
+    }
+    html += '<div class="card">' +
+      '<div class="card-top">' +
+        '<p class="word serif">' + escapeHtml(item.word) + '</p>' +
+        '<button class="del-btn" data-id="' + item.id + '" aria-label="Delete word">&times;</button>' +
+      '</div>' +
+      '<p class="def">' + escapeHtml(item.def) + '</p>' +
+    '</div>';
+  });
+  list.innerHTML = html;
+
+  list.querySelectorAll('.del-btn').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const id = btn.getAttribute('data-id');
+      words = words.filter(w => w.id !== id);
+      await persist();
+      render(document.getElementById('searchInput').value);
+    });
+  });
+}
+
+document.getElementById('searchInput').addEventListener('input', (e) => {
+  render(e.target.value);
+});
+
+document.getElementById('saveBtn').addEventListener('click', async () => {
+  const wordInput = document.getElementById('newWord');
+  const defInput = document.getElementById('newDef');
+  const msg = document.getElementById('lookupMsg');
+  const word = wordInput.value.trim();
+  const def = defInput.value.trim();
+  if (!word || !def) {
+    msg.textContent = 'Add a word and a definition before saving.';
+    msg.className = 'lookup-msg err';
+    return;
+  }
+
+  words.push({ id: uid(), word, def });
+  await persist();
+
+  wordInput.value = '';
+  defInput.value = '';
+  msg.textContent = 'Saved.';
+  msg.className = 'lookup-msg ok';
+
+  render(document.getElementById('searchInput').value);
+});
+
+loadWords();
+</script>
+</body>
+</html>
