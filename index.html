@@ -7,6 +7,8 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Lexicon">
 <meta name="theme-color" content="#10131A">
+<link rel="apple-touch-icon" href="icon.png">
+<link rel="icon" href="icon.png">
 <title>Lexicon</title>
 <style>
   * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
@@ -146,9 +148,12 @@
 
     <div class="panel">
       <p class="panel-label">Add a word</p>
-      <input type="text" id="newWord" placeholder="e.g. plausible">
+      <div class="row">
+        <input type="text" id="newWord" placeholder="e.g. plausible">
+        <button class="btn-primary" id="lookupBtn">Find definition</button>
+      </div>
       <div class="lookup-msg" id="lookupMsg"></div>
-      <textarea id="newDef" placeholder="Type the English definition here"></textarea>
+      <textarea id="newDef" placeholder="Definition will appear here — you can edit it before saving"></textarea>
       <button class="btn-ghost" id="saveBtn">Save word</button>
     </div>
   </div>
@@ -335,6 +340,40 @@ function render(filter) {
 
 document.getElementById('searchInput').addEventListener('input', (e) => {
   render(e.target.value);
+});
+
+async function lookupDefinition(word) {
+  const res = await fetch('https://api.dictionaryapi.dev/api/v2/entries/en/' + encodeURIComponent(word.trim()));
+  if (!res.ok) throw new Error('not found');
+  const data = await res.json();
+  const meanings = data[0] && data[0].meanings ? data[0].meanings : [];
+  for (const m of meanings) {
+    const d = m.definitions && m.definitions[0] && m.definitions[0].definition;
+    if (d) return m.partOfSpeech ? '(' + m.partOfSpeech + ') ' + d : d;
+  }
+  throw new Error('no definition found');
+}
+
+document.getElementById('lookupBtn').addEventListener('click', async () => {
+  const wordInput = document.getElementById('newWord');
+  const defInput = document.getElementById('newDef');
+  const msg = document.getElementById('lookupMsg');
+  const word = wordInput.value.trim();
+  if (!word) { msg.textContent = 'Type a word first.'; msg.className = 'lookup-msg err'; return; }
+
+  msg.innerHTML = '<span class="spin"></span>Looking it up...';
+  msg.className = 'lookup-msg';
+
+  try {
+    const def = await lookupDefinition(word);
+    defInput.value = def;
+    msg.textContent = 'Found it. Feel free to edit before saving.';
+    msg.className = 'lookup-msg ok';
+  } catch (e) {
+    msg.textContent = "Couldn't find that automatically — this often happens with phrases. Type your own definition below.";
+    msg.className = 'lookup-msg err';
+    defInput.focus();
+  }
 });
 
 document.getElementById('saveBtn').addEventListener('click', async () => {
