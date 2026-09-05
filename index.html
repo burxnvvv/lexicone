@@ -11,160 +11,325 @@
 <link rel="icon" href="icon.png">
 <title>Lexicon</title>
 <style>
+  :root {
+    --bg: #10131A; --surface: #171B24; --surface2: #1B2029; --border: #232838;
+    --text: #EDEAE0; --text-dim: #8B8F9C; --text-faint: #565C6E;
+    --accent: #E3A857; --accent-ink: #1A1408; --accent2: #4FB3A5; --danger: #C97B63;
+  }
+  body.light {
+    --bg: #F3EFE4; --surface: #FFFFFF; --surface2: #FBF9F3; --border: #E3DCC8;
+    --text: #2A2620; --text-dim: #6B6656; --text-faint: #948E7C;
+    --accent: #B9762E; --accent-ink: #FFFFFF; --accent2: #2F8577; --danger: #B5533B;
+  }
   * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
   html, body {
-    margin: 0; padding: 0;
-    background: #10131A;
-    color: #EDEAE0;
+    margin: 0; padding: 0; background: var(--bg); color: var(--text);
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    min-height: 100vh;
+    min-height: 100vh; transition: background .2s, color .2s;
   }
   .serif { font-family: Georgia, 'Times New Roman', serif; }
-
-  #app { max-width: 1080px; margin: 0 auto; padding: 28px 20px 70px; }
-
-  header { margin-bottom: 22px; }
-  h1.serif {
-    font-size: 34px; font-weight: 400; margin: 0; letter-spacing: 0.2px;
-    color: #F2EFE6;
+  button { font-family: inherit; cursor: pointer; }
+  input[type=text], textarea, select {
+    width: 100%; background: var(--bg); border: 1px solid var(--border); border-radius: 9px;
+    color: var(--text); padding: 10px 13px; font-size: 15px; outline: none; font-family: inherit;
   }
-  .pron { font-size: 13px; color: #6C7280; margin: 4px 0 0; font-style: italic; }
-  .pron b { color: #E3A857; font-style: normal; font-weight: 600; }
-
-  .stats-row { display: flex; gap: 18px; margin-top: 14px; flex-wrap: wrap; }
-  .stat { background: #171B24; border: 1px solid #232838; border-radius: 10px; padding: 8px 14px; font-size: 13px; color: #9096A6; }
-  .stat b { color: #E3A857; font-size: 15px; }
-
-  .panels { display: grid; grid-template-columns: 1fr; gap: 14px; margin: 22px 0 8px; }
-  @media (min-width: 760px) {
-    .panels { grid-template-columns: 1fr 1fr; align-items: start; }
-  }
-
-  .panel { background: #171B24; border: 1px solid #232838; border-radius: 14px; padding: 16px 18px; }
-  .panel-label { font-size: 11px; text-transform: uppercase; letter-spacing: 1.2px; color: #6C7280; margin: 0 0 10px; }
-
-  input[type=text], textarea {
-    width: 100%;
-    background: #10131A;
-    border: 1px solid #262C3D;
-    border-radius: 9px;
-    color: #EDEAE0;
-    padding: 10px 13px;
-    font-size: 15px;
-    outline: none;
-    font-family: inherit;
-  }
-  input[type=text]:focus, textarea:focus { border-color: #E3A857; }
+  input[type=text]:focus, textarea:focus { border-color: var(--accent); }
   textarea { resize: vertical; min-height: 64px; line-height: 1.45; margin-top: 10px; }
 
-  .row { display: flex; gap: 8px; }
-  .row input { flex: 1; }
+  /* ---------- Gate ---------- */
+  #gate { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 24px; }
+  .gate-box { max-width: 380px; width: 100%; text-align: center; }
+  .gate-box h1 { font-size: 30px; font-weight: 400; margin: 0 0 6px; }
+  .gate-box p { color: var(--text-dim); font-size: 14px; margin: 0 0 22px; }
+  .profile-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 16px; }
+  .profile-btn {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
+    color: var(--text); padding: 12px 14px; font-size: 15px; text-align: left;
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .profile-avatar {
+    width: 32px; height: 32px; border-radius: 50%; background: var(--accent); color: var(--accent-ink);
+    display: inline-flex; align-items: center; justify-content: center; font-weight: 700;
+    margin-right: 10px; font-size: 13px; flex-shrink: 0;
+  }
+  .profile-row { display: flex; align-items: center; }
+  .new-profile-row { display: flex; gap: 8px; }
+  #createProfileBtn { background: var(--accent); color: var(--accent-ink); border: none; border-radius: 10px; padding: 0 18px; font-size: 14px; font-weight: 600; }
 
-  button { font-family: inherit; cursor: pointer; }
-  .btn-primary {
-    background: #E3A857; color: #1A1408; border: none;
-    border-radius: 9px; padding: 10px 16px; font-size: 14px; font-weight: 600;
-    white-space: nowrap;
-  }
-  .btn-primary:active { opacity: 0.85; }
-  .btn-primary:disabled { opacity: 0.4; }
-  .btn-ghost {
-    background: transparent; color: #4FB3A5; border: 1px solid #274B45;
-    border-radius: 9px; padding: 9px 14px; font-size: 13px; margin-top: 10px; width: 100%;
-  }
+  /* ---------- App shell ---------- */
+  #app { display: none; }
+  .screen { display: none; max-width: 900px; margin: 0 auto; padding: 20px 18px calc(90px + env(safe-area-inset-bottom)); }
+  .screen.active { display: block; }
+
+  h1.serif { font-size: 28px; font-weight: 400; margin: 0; }
+  .pron { font-size: 12px; color: var(--text-faint); margin: 4px 0 0; font-style: italic; }
+  .pron b { color: var(--accent); font-style: normal; font-weight: 600; }
+
+  .section-title { font-size: 20px; font-weight: 600; margin: 0 0 4px; }
+  .section-sub { font-size: 13px; color: var(--text-dim); margin: 0 0 18px; }
+
+  .stats-row { display: flex; gap: 10px; margin: 14px 0 4px; flex-wrap: wrap; }
+  .stat { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 8px 14px; font-size: 13px; color: var(--text-dim); }
+  .stat b { color: var(--accent); font-size: 15px; }
+  .stat.learned b { color: var(--accent2); }
+
+  /* ---------- Dictionary ---------- */
+  .panel { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 16px 18px; margin-bottom: 14px; }
+  .panel-label { font-size: 11px; text-transform: uppercase; letter-spacing: 1.2px; color: var(--text-faint); margin: 0 0 10px; }
+  .btn-ghost { background: transparent; color: var(--accent2); border: 1px solid var(--accent2); opacity: 0.9; border-radius: 9px; padding: 9px 14px; font-size: 13px; margin-top: 10px; width: 100%; }
   .lookup-msg { font-size: 12px; margin-top: 8px; min-height: 16px; }
-  .lookup-msg.ok { color: #4FB3A5; }
-  .lookup-msg.err { color: #C97B63; }
-  .spin {
-    display: inline-block; width: 12px; height: 12px; border: 2px solid #4FB3A5;
-    border-top-color: transparent; border-radius: 50%; animation: sp 0.7s linear infinite;
-    vertical-align: -2px; margin-right: 6px;
-  }
-  @keyframes sp { to { transform: rotate(360deg); } }
+  .lookup-msg.err { color: var(--danger); }
 
-  .index-nav {
-    display: flex; gap: 6px; overflow-x: auto; padding: 4px 0 14px;
-    position: sticky; top: 0; background: #10131A; z-index: 5; margin-top: 8px;
-  }
-  .index-nav a {
-    flex-shrink: 0; text-decoration: none; color: #6C7280; font-size: 12px;
-    width: 24px; height: 24px; display: flex; align-items: center; justify-content: center;
-    border-radius: 6px; border: 1px solid #232838;
-  }
-  .index-nav a.has { color: #E3A857; border-color: #3A3320; }
+  .filter-row { display: flex; gap: 6px; margin: 6px 0 14px; }
+  .filter-chip { flex: 1; background: var(--surface); border: 1px solid var(--border); color: var(--text-dim); border-radius: 9px; padding: 8px 4px; font-size: 12.5px; font-weight: 600; }
+  .filter-chip.active { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+
+  .index-nav { display: flex; gap: 6px; overflow-x: auto; padding: 4px 0 14px; }
+  .index-nav a { flex-shrink: 0; text-decoration: none; color: var(--text-faint); font-size: 12px; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; border-radius: 6px; border: 1px solid var(--border); }
+  .index-nav a.has { color: var(--accent); border-color: var(--accent); }
 
   .grid { display: grid; grid-template-columns: 1fr; gap: 10px; }
-  @media (min-width: 640px) {
-    .grid { grid-template-columns: 1fr 1fr; }
-  }
-  @media (min-width: 1000px) {
-    .grid { grid-template-columns: 1fr 1fr 1fr; }
-  }
-
-  .letter-head {
-    font-size: 12px; color: #E3A857;
-    letter-spacing: 1.5px; margin: 22px 2px 8px;
-    font-weight: 600; text-transform: uppercase;
-    grid-column: 1 / -1;
-    scroll-margin-top: 46px;
-  }
-
-  .card {
-    background: #171B24;
-    border: 1px solid #232838;
-    border-left: 3px solid #E3A857;
-    border-radius: 10px;
-    padding: 13px 15px;
-    position: relative;
-  }
+  @media (min-width: 640px) { .grid { grid-template-columns: 1fr 1fr; } }
+  @media (min-width: 1000px) { .grid { grid-template-columns: 1fr 1fr 1fr; } }
+  .letter-head { font-size: 12px; color: var(--accent); letter-spacing: 1.5px; margin: 20px 2px 8px; font-weight: 600; text-transform: uppercase; grid-column: 1 / -1; }
+  .card { background: var(--surface); border: 1px solid var(--border); border-left: 3px solid var(--accent); border-radius: 10px; padding: 13px 15px; }
+  .card.is-learned { border-left-color: var(--accent2); }
   .card-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; }
-  .word { font-size: 17px; color: #F1D9AE; margin: 0; }
-  .def { font-size: 14px; color: #C7CAD3; margin: 5px 0 0; line-height: 1.5; }
-  .del-btn {
-    background: none; border: none; color: #454B5C;
-    font-size: 18px; line-height: 1; padding: 2px 4px; flex-shrink: 0;
-  }
-  .del-btn:active { color: #C97B63; }
+  .word { font-size: 17px; color: var(--accent); margin: 0; }
+  .def { font-size: 14px; color: var(--text-dim); margin: 5px 0 10px; line-height: 1.5; }
+  .del-btn { background: none; border: none; color: var(--text-faint); font-size: 18px; line-height: 1; padding: 2px 4px; }
+  .learn-toggle { font-size: 11px; border: 1px solid var(--border); background: var(--bg); color: var(--text-dim); border-radius: 7px; padding: 5px 10px; }
+  .learn-toggle.on { border-color: var(--accent2); color: var(--accent2); }
+  .empty { text-align: center; color: var(--text-faint); font-size: 14px; padding: 40px 10px; grid-column: 1 / -1; }
 
-  .empty { text-align: center; color: #6C7280; font-size: 14px; padding: 40px 10px; grid-column: 1 / -1; }
+  /* ---------- Practice ---------- */
+  .practice-wrap { display: flex; flex-direction: column; align-items: center; padding: 6px 0 20px; }
+  .flash-progress { font-size: 12px; color: var(--text-faint); margin-bottom: 14px; }
+  .flashcard { width: 100%; max-width: 440px; min-height: 220px; background: var(--surface); border: 1px solid var(--border); border-radius: 18px; padding: 30px 24px; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; gap: 14px; }
+  .flash-word { font-size: 26px; color: var(--accent); }
+  .flash-def { font-size: 15px; color: var(--text-dim); line-height: 1.5; }
+  .flash-hint { font-size: 12px; color: var(--text-faint); }
+  .flash-actions { display: flex; gap: 10px; margin-top: 20px; width: 100%; max-width: 440px; }
+  .flash-actions button { flex: 1; padding: 12px; border-radius: 10px; font-size: 14px; font-weight: 600; border: none; }
+  .btn-again { background: var(--surface2); color: var(--accent); border: 1px solid var(--border) !important; }
+  .btn-got-it { background: var(--accent2); color: var(--bg); }
+  .practice-done { text-align: center; color: var(--text-dim); padding: 40px 10px; }
+
+  /* ---------- Profile screen ---------- */
+  .profile-hero { display: flex; align-items: center; gap: 14px; margin-bottom: 20px; }
+  .profile-hero .profile-avatar { width: 52px; height: 52px; font-size: 20px; }
+  .profile-hero-name { font-size: 20px; font-weight: 600; }
+  .other-profiles { margin-top: 22px; }
+  .danger-btn { background: transparent; border: 1px solid var(--danger); color: var(--danger); border-radius: 9px; padding: 9px 14px; font-size: 13px; width: 100%; margin-top: 8px; }
+
+  /* ---------- Settings ---------- */
+  .setting-row { display: flex; justify-content: space-between; align-items: center; padding: 14px 0; border-bottom: 1px solid var(--border); }
+  .setting-row:last-child { border-bottom: none; }
+  .setting-label { font-size: 14px; }
+  .setting-sub { font-size: 12px; color: var(--text-faint); margin-top: 2px; }
+  .seg { display: flex; background: var(--bg); border: 1px solid var(--border); border-radius: 9px; padding: 3px; }
+  .seg button { border: none; background: transparent; color: var(--text-dim); font-size: 12.5px; padding: 6px 12px; border-radius: 7px; font-weight: 600; }
+  .seg button.active { background: var(--accent); color: var(--accent-ink); }
+  select { width: auto; padding: 8px 12px; font-size: 13px; }
+  input[type=range] { width: 130px; accent-color: var(--accent); }
+
+  /* ---------- Bottom nav ---------- */
+  #bottomNav {
+    position: fixed; left: 0; right: 0; bottom: 0; z-index: 30;
+    background: var(--surface); border-top: 1px solid var(--border);
+    display: flex; padding: 8px 6px calc(8px + env(safe-area-inset-bottom));
+  }
+  .nav-btn { flex: 1; background: none; border: none; display: flex; flex-direction: column; align-items: center; gap: 3px; color: var(--text-faint); font-size: 10.5px; padding: 4px 0; }
+  .nav-btn .icon { font-size: 19px; }
+  .nav-btn.active { color: var(--accent); }
+
+  /* ---------- New: tags, speak, quiz, stats, streak ---------- */
+  .tag-pills { display: flex; flex-wrap: wrap; gap: 5px; margin: 6px 0 10px; }
+  .tag-pill { font-size: 10.5px; background: var(--surface2); border: 1px solid var(--border); color: var(--text-dim); border-radius: 20px; padding: 3px 9px; }
+  .filter-row { display: flex; gap: 6px; margin: 6px 0 14px; overflow-x: auto; padding-bottom: 2px; }
+  .filter-chip { flex-shrink: 0; background: var(--surface); border: 1px solid var(--border); color: var(--text-dim); border-radius: 9px; padding: 8px 12px; font-size: 12.5px; font-weight: 600; white-space: nowrap; }
+  .filter-chip.active { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+  .speak-btn { background: none; border: none; color: var(--accent2); font-size: 16px; padding: 2px 6px; flex-shrink: 0; }
+  .card-top { gap: 4px; }
+
+  .streak-badge { display: inline-flex; align-items: center; gap: 6px; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 8px 14px; font-size: 13px; color: var(--text-dim); margin-top: 10px; }
+  .streak-badge b { color: var(--accent); font-size: 16px; }
+
+  .chart-wrap { margin-top: 20px; }
+  .chart-bars { display: flex; align-items: flex-end; gap: 8px; height: 90px; margin-top: 10px; }
+  .chart-col { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 6px; }
+  .chart-bar { width: 100%; background: var(--accent2); border-radius: 4px 4px 0 0; min-height: 3px; }
+  .chart-label { font-size: 10px; color: var(--text-faint); }
+
+  .exp-imp-row { display: flex; gap: 8px; margin-top: 4px; }
+  .exp-imp-row button, .exp-imp-row label {
+    flex: 1; text-align: center; background: var(--surface2); border: 1px solid var(--border); color: var(--text);
+    border-radius: 9px; padding: 10px; font-size: 13px; cursor: pointer;
+  }
+
+  .sub-tabs { display: flex; gap: 6px; margin-bottom: 16px; }
+  .sub-tab { flex: 1; background: var(--surface); border: 1px solid var(--border); color: var(--text-dim); border-radius: 9px; padding: 9px; font-size: 13px; font-weight: 600; }
+  .sub-tab.active { background: var(--accent2); color: var(--bg); border-color: var(--accent2); }
+
+  .quiz-progress { font-size: 12px; color: var(--text-faint); margin-bottom: 10px; text-align: center; }
+  .quiz-word { font-size: 24px; text-align: center; margin-bottom: 18px; color: var(--accent); }
+  .quiz-options { display: flex; flex-direction: column; gap: 9px; max-width: 460px; margin: 0 auto; }
+  .quiz-opt { background: var(--surface); border: 1px solid var(--border); color: var(--text); border-radius: 10px; padding: 12px 14px; font-size: 14px; text-align: left; line-height: 1.4; }
+  .quiz-opt.correct { border-color: var(--accent2); background: color-mix(in srgb, var(--accent2) 15%, var(--surface)); }
+  .quiz-opt.wrong { border-color: var(--danger); background: color-mix(in srgb, var(--danger) 15%, var(--surface)); }
+  .quiz-score { text-align: center; padding: 30px 10px; color: var(--text-dim); }
+  .quiz-score .big { font-size: 40px; color: var(--accent); font-family: Georgia, serif; }
 </style>
 </head>
 <body>
-<div id="app">
-  <header>
-    <h1 class="serif">Lexicon</h1>
-    <p class="pron"><b>/ˈlɛksɪkɒn/</b> &mdash; the words you're building your English on</p>
-    <div class="stats-row">
-      <div class="stat"><b id="countNum">0</b> words</div>
-      <div class="stat"><b id="letterNum">0</b> letters covered</div>
-    </div>
-  </header>
 
-  <div class="panels">
-    <div class="panel">
-      <p class="panel-label">Search</p>
+<div id="gate">
+  <div class="gate-box">
+    <h1 class="serif">Lexicon</h1>
+    <p id="gateSub">Кто занимается?</p>
+    <div class="profile-list" id="profileList"></div>
+    <div class="new-profile-row">
+      <input type="text" id="newProfileName" placeholder="Введи имя...">
+      <button id="createProfileBtn">Начать</button>
+    </div>
+  </div>
+</div>
+
+<audio id="bgMusic" src="ambient.mp3" loop preload="none"></audio>
+
+<div id="app">
+
+  <!-- DICTIONARY -->
+  <div class="screen active" id="screen-dictionary">
+    <h1 class="serif" id="appTitle">Lexicon</h1>
+    <p class="pron" id="appTagline"><b>/ˈlɛksɪkɒn/</b> &mdash; the words you're building your English on</p>
+    <div class="stats-row">
+      <div class="stat"><b id="countNum">0</b> <span id="lblWords">words</span></div>
+      <div class="stat learned"><b id="learnedNum">0</b> <span id="lblLearned">learned</span></div>
+      <div class="stat"><b id="letterNum">0</b> <span id="lblLetters">letters</span></div>
+    </div>
+
+    <div class="panel" style="margin-top:14px;">
+      <p class="panel-label" id="lblSearch">Search</p>
       <input type="text" id="searchInput" placeholder="Search a word or a definition...">
     </div>
 
     <div class="panel">
-      <p class="panel-label">Add a word</p>
-      <div class="row">
-        <input type="text" id="newWord" placeholder="e.g. plausible">
-        <button class="btn-primary" id="lookupBtn">Find definition</button>
-      </div>
+      <p class="panel-label" id="lblAddWord">Add a word</p>
+      <input type="text" id="newWord" placeholder="e.g. plausible">
+      <textarea id="newDef" placeholder="Type the English definition here"></textarea>
+      <input type="text" id="newTags" placeholder="Tags: ielts, everyday..." style="margin-top:10px;">
       <div class="lookup-msg" id="lookupMsg"></div>
-      <textarea id="newDef" placeholder="Definition will appear here — you can edit it before saving"></textarea>
       <button class="btn-ghost" id="saveBtn">Save word</button>
+    </div>
+
+    <div class="filter-row" id="filterRow">
+      <button class="filter-chip active" data-filter="all">All</button>
+      <button class="filter-chip" data-filter="learned">Learned</button>
+      <button class="filter-chip" data-filter="unlearned">Not learned</button>
+    </div>
+
+    <div class="index-nav" id="indexNav"></div>
+    <div class="grid" id="list"></div>
+  </div>
+
+  <!-- PRACTICE -->
+  <div class="screen" id="screen-practice">
+    <p class="section-title" id="practiceTitle">Practice</p>
+    <p class="section-sub" id="practiceSub">Flip through the words you haven't learned yet</p>
+    <div class="sub-tabs">
+      <button class="sub-tab active" data-sub="flash" id="subFlashBtn">Flashcards</button>
+      <button class="sub-tab" data-sub="quiz" id="subQuizBtn">Quiz</button>
+    </div>
+    <div class="practice-wrap" id="practiceWrap"></div>
+    <div class="practice-wrap" id="quizWrap" style="display:none;"></div>
+  </div>
+
+  <!-- PROFILE -->
+  <div class="screen" id="screen-profile">
+    <p class="section-title" id="profileTitle">Profile</p>
+    <div class="profile-hero">
+      <span class="profile-avatar" id="profileAvatar"></span>
+      <span class="profile-hero-name" id="profileHeroName"></span>
+    </div>
+    <div class="stats-row">
+      <div class="stat"><b id="pCountNum">0</b> <span id="pLblWords">words</span></div>
+      <div class="stat learned"><b id="pLearnedNum">0</b> <span id="pLblLearned">learned</span></div>
+    </div>
+    <div class="streak-badge">🔥 <b id="streakNum">0</b> <span id="lblStreak">day streak</span></div>
+
+    <div class="chart-wrap">
+      <p class="panel-label" id="lblChart">Last 7 days</p>
+      <div class="chart-bars" id="chartBars"></div>
+    </div>
+
+    <div class="other-profiles">
+      <p class="panel-label" id="lblOtherProfiles">Switch profile</p>
+      <div class="profile-list" id="otherProfileList"></div>
+      <div class="new-profile-row" style="margin-top:10px;">
+        <input type="text" id="addProfileName2" placeholder="New name...">
+        <button id="addProfileBtn2">+</button>
+      </div>
+      <button class="danger-btn" id="deleteProfileBtn">Delete this profile</button>
     </div>
   </div>
 
-  <div class="index-nav" id="indexNav"></div>
+  <!-- SETTINGS -->
+  <div class="screen" id="screen-settings">
+    <p class="section-title" id="settingsTitle">Settings</p>
 
-  <div class="grid" id="list"></div>
+    <div class="panel">
+      <div class="setting-row">
+        <div><div class="setting-label" id="lblTheme">Theme</div></div>
+        <div class="seg" id="themeSeg">
+          <button data-v="dark" id="themeDarkBtn">🌙</button>
+          <button data-v="light" id="themeLightBtn">☀️</button>
+        </div>
+      </div>
+      <div class="setting-row">
+        <div><div class="setting-label" id="lblLanguage">Language</div></div>
+        <select id="langSelect">
+          <option value="ru">Русский</option>
+          <option value="uz">O'zbekcha</option>
+          <option value="en">English</option>
+        </select>
+      </div>
+      <div class="setting-row">
+        <div>
+          <div class="setting-label" id="lblMusic">Background music</div>
+          <div class="setting-sub" id="lblMusicSub">Calm ambient loop</div>
+        </div>
+        <div class="seg" id="musicSeg">
+          <button data-v="off" id="musicOffBtn">Off</button>
+          <button data-v="on" id="musicOnBtn">On</button>
+        </div>
+      </div>
+      <div class="setting-row">
+        <div><div class="setting-label" id="lblVolume">Volume</div></div>
+        <input type="range" id="volumeSlider" min="0" max="100" value="35">
+      </div>
+    </div>
+
+    <div class="panel">
+      <p class="panel-label" id="lblBackup">Backup</p>
+      <div class="exp-imp-row">
+        <button id="exportBtn" type="button">⬇ <span id="lblExport">Export</span></button>
+        <label for="importFile">⬆ <span id="lblImport">Import</span></label>
+        <input type="file" id="importFile" accept=".json" style="display:none;">
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div id="bottomNav" style="display:none;">
+  <button class="nav-btn active" data-screen="dictionary"><span class="icon">📖</span><span id="navDict">Dictionary</span></button>
+  <button class="nav-btn" data-screen="practice"><span class="icon">🔄</span><span id="navPrac">Practice</span></button>
+  <button class="nav-btn" data-screen="profile"><span class="icon">👤</span><span id="navProf">Profile</span></button>
+  <button class="nav-btn" data-screen="settings"><span class="icon">⚙️</span><span id="navSet">Settings</span></button>
 </div>
 
 <script>
-const STORAGE_KEY = 'lexicon-words';
 const ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
 
 const DEFAULT_WORDS = [
@@ -248,158 +413,571 @@ const DEFAULT_WORDS = [
 ["Assign","To give someone a specific task, role, or responsibility."]
 ];
 
+/* ---------------- i18n ---------------- */
+const I18N = {
+  ru: {
+    gateSub: "Кто занимается?", start: "Начать", namePlaceholder: "Введи имя...",
+    tagline: "слова, из которых ты строишь свой английский",
+    words: "слов", learned: "выучено", letters: "букв",
+    search: "Поиск", searchPlaceholder: "Слово или определение...",
+    addWord: "Добавить слово", wordPlaceholder: "например, plausible", defPlaceholder: "Впиши определение на английском",
+    saveWord: "Сохранить", saved: "Сохранено.", fillBoth: "Заполни слово и определение.",
+    filterAll: "Все", filterLearned: "Выучено", filterUnlearned: "Не выучено",
+    noMatches: "Ничего не найдено.", noWords: "Пока нет слов — добавь первое выше.",
+    markLearned: "Отметить выученным", learnedBtn: "✓ Выучено",
+    practiceTitle: "Повторение", practiceSub: "Карточки по невыученным словам",
+    tapToReveal: "Нажми на карточку, чтобы увидеть определение",
+    stillLearning: "Ещё учу", gotIt: "Знаю ✓",
+    allCaughtUp: "Все слова выучены — добавь новые в Словаре, или просто отдохни 🎉",
+    roundFinished: "Круг пройден! 👏", goAgain: "Пройти ещё раз",
+    profileTitle: "Профиль", switchProfile: "Сменить профиль",
+    deleteProfile: "Удалить этот профиль", confirmDelete: "Удалить профиль и все его слова?",
+    settingsTitle: "Настройки", theme: "Тема", language: "Язык",
+    music: "Фоновая музыка", musicSub: "Спокойный зацикленный эмбиент",
+    off: "Выкл", on: "Вкл", volume: "Громкость",
+    navDict: "Словарь", navPrac: "Практика", navProf: "Профиль", navSet: "Настройки",
+    tagsPlaceholder: "Теги: ielts, бытовые...", streak: "дней подряд", chart: "Последние 7 дней",
+    backup: "Резервная копия", export: "Экспорт", import: "Импорт", importedMsg: "Слова импортированы.",
+    flashcards: "Карточки", quiz: "Тест", quizScore: "Правильно", quizAgain: "Пройти снова",
+    quizNeedMore: "Добавь хотя бы 4 слова, чтобы начать тест."
+  },
+  uz: {
+    gateSub: "Kim shug'ullanadi?", start: "Boshlash", namePlaceholder: "Ismingizni kiriting...",
+    tagline: "ingliz tilingizni quradigan so'zlar",
+    words: "so'z", learned: "o'rganildi", letters: "harf",
+    search: "Qidiruv", searchPlaceholder: "So'z yoki ta'rif...",
+    addWord: "So'z qo'shish", wordPlaceholder: "masalan, plausible", defPlaceholder: "Ingliz tilida ta'rifini yozing",
+    saveWord: "Saqlash", saved: "Saqlandi.", fillBoth: "So'z va ta'rifni to'ldiring.",
+    filterAll: "Hammasi", filterLearned: "O'rganildi", filterUnlearned: "O'rganilmagan",
+    noMatches: "Hech narsa topilmadi.", noWords: "Hali so'z yo'q — yuqorida birinchisini qo'shing.",
+    markLearned: "O'rganildi deb belgilash", learnedBtn: "✓ O'rganildi",
+    practiceTitle: "Mashq", practiceSub: "O'rganilmagan so'zlar bo'yicha kartochkalar",
+    tapToReveal: "Ta'rifni ko'rish uchun kartochkaga bosing",
+    stillLearning: "Hali o'rganyapman", gotIt: "Bilaman ✓",
+    allCaughtUp: "Barcha so'zlar o'rganildi — Lug'atda yangilarini qo'shing 🎉",
+    roundFinished: "Tur tugadi! 👏", goAgain: "Yana bir bor",
+    profileTitle: "Profil", switchProfile: "Profilni almashtirish",
+    deleteProfile: "Bu profilni o'chirish", confirmDelete: "Profil va barcha so'zlari o'chirilsinmi?",
+    settingsTitle: "Sozlamalar", theme: "Mavzu", language: "Til",
+    music: "Fon musiqasi", musicSub: "Sokin, aylanuvchi ambient",
+    off: "O'chiq", on: "Yoniq", volume: "Ovoz balandligi",
+    navDict: "Lug'at", navPrac: "Mashq", navProf: "Profil", navSet: "Sozlamalar",
+    tagsPlaceholder: "Teglar: ielts, kundalik...", streak: "kun ketma-ket", chart: "Oxirgi 7 kun",
+    backup: "Zaxira nusxa", export: "Eksport", import: "Import", importedMsg: "So'zlar import qilindi.",
+    flashcards: "Kartochkalar", quiz: "Test", quizScore: "To'g'ri", quizAgain: "Yana boshlash",
+    quizNeedMore: "Testni boshlash uchun kamida 4 ta so'z qo'shing."
+  },
+  en: {
+    gateSub: "Who's studying?", start: "Start", namePlaceholder: "Enter your name...",
+    tagline: "the words you're building your English on",
+    words: "words", learned: "learned", letters: "letters",
+    search: "Search", searchPlaceholder: "Search a word or a definition...",
+    addWord: "Add a word", wordPlaceholder: "e.g. plausible", defPlaceholder: "Type the English definition here",
+    saveWord: "Save word", saved: "Saved.", fillBoth: "Add a word and a definition before saving.",
+    filterAll: "All", filterLearned: "Learned", filterUnlearned: "Not learned",
+    noMatches: "No matches.", noWords: "No words yet. Add your first one above.",
+    markLearned: "Mark learned", learnedBtn: "✓ Learned",
+    practiceTitle: "Practice", practiceSub: "Flip through the words you haven't learned yet",
+    tapToReveal: "Tap the card to reveal the definition",
+    stillLearning: "Still learning", gotIt: "Got it ✓",
+    allCaughtUp: "All caught up — add more words in the Dictionary 🎉",
+    roundFinished: "Round finished! 👏", goAgain: "Go again",
+    profileTitle: "Profile", switchProfile: "Switch profile",
+    deleteProfile: "Delete this profile", confirmDelete: "Delete this profile and all its words?",
+    settingsTitle: "Settings", theme: "Theme", language: "Language",
+    music: "Background music", musicSub: "Calm ambient loop",
+    off: "Off", on: "On", volume: "Volume",
+    navDict: "Dictionary", navPrac: "Practice", navProf: "Profile", navSet: "Settings",
+    tagsPlaceholder: "Tags: ielts, everyday...", streak: "day streak", chart: "Last 7 days",
+    backup: "Backup", export: "Export", import: "Import", importedMsg: "Words imported.",
+    flashcards: "Flashcards", quiz: "Quiz", quizScore: "Correct", quizAgain: "Try again",
+    quizNeedMore: "Add at least 4 words to start a quiz."
+  }
+};
+let lang = localStorage.getItem('lexicon-lang') || 'ru';
+
+function t(key) { return I18N[lang][key] || I18N.en[key] || key; }
+
+function applyI18n() {
+  document.getElementById('gateSub').textContent = t('gateSub');
+  document.getElementById('createProfileBtn').textContent = t('start');
+  document.getElementById('newProfileName').placeholder = t('namePlaceholder');
+  document.getElementById('appTagline').innerHTML = '<b>/ˈlɛksɪkɒn/</b> — ' + t('tagline');
+  document.getElementById('lblWords').textContent = t('words');
+  document.getElementById('lblLearned').textContent = t('learned');
+  document.getElementById('lblLetters').textContent = t('letters');
+  document.getElementById('lblSearch').textContent = t('search');
+  document.getElementById('searchInput').placeholder = t('searchPlaceholder');
+  document.getElementById('lblAddWord').textContent = t('addWord');
+  document.getElementById('newWord').placeholder = t('wordPlaceholder');
+  document.getElementById('newDef').placeholder = t('defPlaceholder');
+  document.getElementById('saveBtn').textContent = t('saveWord');
+  document.querySelector('[data-filter="all"]').textContent = t('filterAll');
+  document.querySelector('[data-filter="learned"]').textContent = t('filterLearned');
+  document.querySelector('[data-filter="unlearned"]').textContent = t('filterUnlearned');
+  document.getElementById('practiceTitle').textContent = t('practiceTitle');
+  document.getElementById('practiceSub').textContent = t('practiceSub');
+  document.getElementById('profileTitle').textContent = t('profileTitle');
+  document.getElementById('lblOtherProfiles').textContent = t('switchProfile');
+  document.getElementById('addProfileName2').placeholder = t('namePlaceholder');
+  document.getElementById('deleteProfileBtn').textContent = t('deleteProfile');
+  document.getElementById('pLblWords').textContent = t('words');
+  document.getElementById('pLblLearned').textContent = t('learned');
+  document.getElementById('settingsTitle').textContent = t('settingsTitle');
+  document.getElementById('lblTheme').textContent = t('theme');
+  document.getElementById('lblLanguage').textContent = t('language');
+  document.getElementById('lblMusic').textContent = t('music');
+  document.getElementById('lblMusicSub').textContent = t('musicSub');
+  document.getElementById('musicOffBtn').textContent = t('off');
+  document.getElementById('musicOnBtn').textContent = t('on');
+  document.getElementById('lblVolume').textContent = t('volume');
+  document.getElementById('navDict').textContent = t('navDict');
+  document.getElementById('navPrac').textContent = t('navPrac');
+  document.getElementById('navProf').textContent = t('navProf');
+  document.getElementById('navSet').textContent = t('navSet');
+  document.getElementById('newTags').placeholder = t('tagsPlaceholder');
+  document.getElementById('lblStreak').textContent = t('streak');
+  document.getElementById('lblChart').textContent = t('chart');
+  document.getElementById('lblBackup').textContent = t('backup');
+  document.getElementById('lblExport').textContent = t('export');
+  document.getElementById('lblImport').textContent = t('import');
+  document.getElementById('subFlashBtn').textContent = t('flashcards');
+  document.getElementById('subQuizBtn').textContent = t('quiz');
+  document.getElementById('langSelect').value = lang;
+  render(document.getElementById('searchInput').value);
+  renderPractice();
+}
+
+document.getElementById('langSelect').addEventListener('change', (e) => {
+  lang = e.target.value;
+  localStorage.setItem('lexicon-lang', lang);
+  applyI18n();
+});
+
+/* ---------------- Theme ---------------- */
+function applyTheme(theme) {
+  document.body.classList.toggle('light', theme === 'light');
+  document.getElementById('themeDarkBtn').classList.toggle('active', theme === 'dark');
+  document.getElementById('themeLightBtn').classList.toggle('active', theme === 'light');
+  localStorage.setItem('lexicon-theme', theme);
+}
+document.getElementById('themeDarkBtn').addEventListener('click', () => applyTheme('dark'));
+document.getElementById('themeLightBtn').addEventListener('click', () => applyTheme('light'));
+
+/* ---------------- Music ---------------- */
+const bgMusic = document.getElementById('bgMusic');
+function applyMusicState(on) {
+  document.getElementById('musicOffBtn').classList.toggle('active', !on);
+  document.getElementById('musicOnBtn').classList.toggle('active', on);
+  localStorage.setItem('lexicon-music', on ? 'on' : 'off');
+  if (on) bgMusic.play().catch(() => {}); else bgMusic.pause();
+}
+document.getElementById('musicOffBtn').addEventListener('click', () => applyMusicState(false));
+document.getElementById('musicOnBtn').addEventListener('click', () => applyMusicState(true));
+document.getElementById('volumeSlider').addEventListener('input', (e) => {
+  bgMusic.volume = e.target.value / 100;
+  localStorage.setItem('lexicon-volume', e.target.value);
+});
+
+/* ---------------- State ---------------- */
+let currentProfile = null;
 let words = [];
+let activeFilter = 'all';
+let practiceQueue = [];
+let practiceIndex = 0;
+let practiceRevealed = false;
 
-function uid() {
-  return Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
-}
-
-async function loadWords() {
+function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 7); }
+function escapeHtml(str) { const div = document.createElement('div'); div.textContent = str; return div.innerHTML; }
+function speak(text) {
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (raw) {
-      words = JSON.parse(raw);
-    } else {
-      words = DEFAULT_WORDS.map(([w, d]) => ({ id: uid(), word: w, def: d }));
-      persist();
-    }
-  } catch (e) {
-    words = DEFAULT_WORDS.map(([w, d]) => ({ id: uid(), word: w, def: d }));
-    try { persist(); } catch (e2) {}
-  }
-  render();
+    if (!('speechSynthesis' in window)) return;
+    speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(text);
+    u.lang = 'en-US'; u.rate = 0.92;
+    speechSynthesis.speak(u);
+  } catch (e) {}
 }
 
-function persist() {
+/* ---------------- Profiles ---------------- */
+function getProfiles() { try { return JSON.parse(localStorage.getItem('lexicon-profiles') || '[]'); } catch(e) { return []; } }
+function saveProfiles(list) { localStorage.setItem('lexicon-profiles', JSON.stringify(list)); }
+
+function renderGate() {
+  const list = document.getElementById('profileList');
+  const profiles = getProfiles();
+  list.innerHTML = profiles.map(name =>
+    '<button class="profile-btn" data-name="' + escapeHtml(name) + '">' +
+      '<span class="profile-row"><span class="profile-avatar">' + escapeHtml(name.charAt(0).toUpperCase()) + '</span>' + escapeHtml(name) + '</span>' +
+      '<span style="color:var(--text-faint);">&rsaquo;</span>' +
+    '</button>'
+  ).join('');
+  list.querySelectorAll('.profile-btn').forEach(btn => btn.addEventListener('click', () => selectProfile(btn.getAttribute('data-name'))));
+}
+
+function selectProfile(name) {
+  localStorage.setItem('lexicon-current', name);
+  currentProfile = name;
+  const profiles = getProfiles();
+  if (!profiles.includes(name)) { profiles.push(name); saveProfiles(profiles); }
+  startApp();
+}
+
+document.getElementById('createProfileBtn').addEventListener('click', () => {
+  const input = document.getElementById('newProfileName');
+  const name = input.value.trim();
+  if (!name) return;
+  selectProfile(name);
+});
+document.getElementById('newProfileName').addEventListener('keydown', (e) => { if (e.key === 'Enter') document.getElementById('createProfileBtn').click(); });
+document.getElementById('addProfileBtn2').addEventListener('click', () => {
+  const input = document.getElementById('addProfileName2');
+  const name = input.value.trim();
+  if (!name) return;
+  input.value = '';
+  selectProfile(name);
+});
+
+document.getElementById('deleteProfileBtn').addEventListener('click', () => {
+  if (!confirm(t('confirmDelete'))) return;
+  localStorage.removeItem('lexicon-words::' + currentProfile);
+  const profiles = getProfiles().filter(p => p !== currentProfile);
+  saveProfiles(profiles);
+  localStorage.removeItem('lexicon-current');
+  document.getElementById('app').style.display = 'none';
+  document.getElementById('bottomNav').style.display = 'none';
+  document.getElementById('gate').style.display = 'flex';
+  renderGate();
+});
+
+/* ---------------- Words storage ---------------- */
+function wordsKey() { return 'lexicon-words::' + currentProfile; }
+function loadWords() {
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(words));
+    const raw = localStorage.getItem(wordsKey());
+    words = raw ? JSON.parse(raw) : DEFAULT_WORDS.map(([w, d]) => ({ id: uid(), word: w, def: d, learned: false, tags: [] }));
+    if (!raw) persist();
+    words.forEach(w => { if (!w.tags) w.tags = []; });
   } catch (e) {
-    console.error('Storage error', e);
+    words = DEFAULT_WORDS.map(([w, d]) => ({ id: uid(), word: w, def: d, learned: false, tags: [] }));
+    persist();
   }
 }
+function persist() { try { localStorage.setItem(wordsKey(), JSON.stringify(words)); } catch (e) {} }
 
-function escapeHtml(str) {
-  const div = document.createElement('div');
-  div.textContent = str;
-  return div.innerHTML;
+/* ---------------- Streak & history ---------------- */
+function todayStr() { return new Date().toISOString().slice(0, 10); }
+function streakKey() { return 'lexicon-streak::' + currentProfile; }
+function historyKey() { return 'lexicon-history::' + currentProfile; }
+
+function touchStreak() {
+  const data = JSON.parse(localStorage.getItem(streakKey()) || '{"count":0,"last":""}');
+  const today = todayStr();
+  if (data.last === today) return;
+  const yesterday = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
+  data.count = (data.last === yesterday) ? data.count + 1 : 1;
+  data.last = today;
+  localStorage.setItem(streakKey(), JSON.stringify(data));
+}
+function getStreak() {
+  const data = JSON.parse(localStorage.getItem(streakKey()) || '{"count":0,"last":""}');
+  const today = todayStr();
+  const yesterday = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
+  if (data.last !== today && data.last !== yesterday) return 0;
+  return data.count;
+}
+function logLearnedToday() {
+  const hist = JSON.parse(localStorage.getItem(historyKey()) || '{}');
+  const today = todayStr();
+  hist[today] = (hist[today] || 0) + 1;
+  localStorage.setItem(historyKey(), JSON.stringify(hist));
+  touchStreak();
+}
+function renderChart() {
+  const hist = JSON.parse(localStorage.getItem(historyKey()) || '{}');
+  const days = [];
+  for (let i = 6; i >= 0; i--) {
+    const d = new Date(Date.now() - i * 86400000);
+    days.push({ key: d.toISOString().slice(0, 10), label: d.toLocaleDateString(lang === 'en' ? 'en-US' : lang, { weekday: 'short' }).slice(0, 2) });
+  }
+  const max = Math.max(1, ...days.map(d => hist[d.key] || 0));
+  const bars = document.getElementById('chartBars');
+  bars.innerHTML = days.map(d => {
+    const val = hist[d.key] || 0;
+    const h = Math.round((val / max) * 80) + (val > 0 ? 6 : 2);
+    return '<div class="chart-col"><div class="chart-bar" style="height:' + h + 'px;" title="' + val + '"></div><div class="chart-label">' + d.label + '</div></div>';
+  }).join('');
 }
 
+/* ---------------- App start ---------------- */
+function startApp() {
+  document.getElementById('gate').style.display = 'none';
+  document.getElementById('app').style.display = 'block';
+  document.getElementById('bottomNav').style.display = 'flex';
+  loadWords();
+  renderProfileScreen();
+  applyI18n();
+  buildPracticeQueue();
+}
+
+function renderProfileScreen() {
+  document.getElementById('profileAvatar').textContent = currentProfile.charAt(0).toUpperCase();
+  document.getElementById('profileHeroName').textContent = currentProfile;
+  document.getElementById('pCountNum').textContent = words.length;
+  document.getElementById('pLearnedNum').textContent = words.filter(w => w.learned).length;
+  document.getElementById('streakNum').textContent = getStreak();
+  renderChart();
+  const others = getProfiles().filter(p => p !== currentProfile);
+  const list = document.getElementById('otherProfileList');
+  list.innerHTML = others.map(name =>
+    '<button class="profile-btn" data-name="' + escapeHtml(name) + '">' +
+      '<span class="profile-row"><span class="profile-avatar">' + escapeHtml(name.charAt(0).toUpperCase()) + '</span>' + escapeHtml(name) + '</span>' +
+      '<span style="color:var(--text-faint);">&rsaquo;</span>' +
+    '</button>'
+  ).join('');
+  list.querySelectorAll('.profile-btn').forEach(btn => btn.addEventListener('click', () => selectProfile(btn.getAttribute('data-name'))));
+}
+
+/* ---------------- Bottom nav ---------------- */
+document.querySelectorAll('.nav-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('screen-' + btn.getAttribute('data-screen')).classList.add('active');
+    if (btn.getAttribute('data-screen') === 'profile') renderProfileScreen();
+    if (btn.getAttribute('data-screen') === 'practice') { buildPracticeQueue(); renderPractice(); }
+    window.scrollTo(0, 0);
+  });
+});
+
+/* ---------------- Filters ---------------- */
+document.querySelectorAll('.filter-chip[data-filter]').forEach(chip => {
+  chip.addEventListener('click', () => setFilter(chip.getAttribute('data-filter')));
+});
+function setFilter(f) {
+  activeFilter = f;
+  document.querySelectorAll('.filter-chip').forEach(c => c.classList.toggle('active', c.getAttribute('data-filter') === f || c.getAttribute('data-tag') === f));
+  render(document.getElementById('searchInput').value);
+}
+function renderTagChips() {
+  const row = document.getElementById('filterRow');
+  row.querySelectorAll('.filter-chip[data-tag]').forEach(el => el.remove());
+  const allTags = [...new Set(words.flatMap(w => w.tags || []))];
+  allTags.forEach(tag => {
+    const btn = document.createElement('button');
+    btn.className = 'filter-chip' + (activeFilter === 'tag:' + tag ? ' active' : '');
+    btn.setAttribute('data-tag', 'tag:' + tag);
+    btn.textContent = '#' + tag;
+    btn.addEventListener('click', () => setFilter('tag:' + tag));
+    row.appendChild(btn);
+  });
+}
+
+/* ---------------- Dictionary render ---------------- */
 function render(filter) {
   const list = document.getElementById('list');
   const q = (filter || '').trim().toLowerCase();
   let filtered = words;
-  if (q) {
-    filtered = words.filter(w =>
-      w.word.toLowerCase().includes(q) || w.def.toLowerCase().includes(q)
-    );
-  }
+  if (activeFilter === 'learned') filtered = filtered.filter(w => w.learned);
+  else if (activeFilter === 'unlearned') filtered = filtered.filter(w => !w.learned);
+  else if (activeFilter.startsWith('tag:')) { const tg = activeFilter.slice(4); filtered = filtered.filter(w => (w.tags || []).includes(tg)); }
+  if (q) filtered = filtered.filter(w => w.word.toLowerCase().includes(q) || w.def.toLowerCase().includes(q));
 
   const lettersPresent = new Set(words.map(w => w.word.charAt(0).toUpperCase()));
   document.getElementById('countNum').textContent = words.length;
+  document.getElementById('learnedNum').textContent = words.filter(w => w.learned).length;
   document.getElementById('letterNum').textContent = lettersPresent.size;
+  renderTagChips();
 
   const nav = document.getElementById('indexNav');
-  nav.innerHTML = ALPHABET.map(l =>
-    '<a href="#letter-' + l + '" class="' + (lettersPresent.has(l) ? 'has' : '') + '">' + l + '</a>'
-  ).join('');
+  nav.innerHTML = ALPHABET.map(l => '<a href="#letter-' + l + '" class="' + (lettersPresent.has(l) ? 'has' : '') + '">' + l + '</a>').join('');
   nav.style.display = q ? 'none' : 'flex';
 
-  if (filtered.length === 0) {
-    list.innerHTML = '<div class="empty">' + (q ? 'No matches. Try a different search.' : 'No words yet. Add your first one above.') + '</div>';
-    return;
-  }
+  if (filtered.length === 0) { list.innerHTML = '<div class="empty">' + (q ? t('noMatches') : t('noWords')) + '</div>'; return; }
 
   const sorted = [...filtered].sort((a, b) => a.word.localeCompare(b.word));
-  let html = '';
-  let lastLetter = '';
+  let html = ''; let lastLetter = '';
   sorted.forEach(item => {
-    const letter = item.word.charAt(0).toUpperCase();
-    if (!q && letter !== lastLetter) {
-      html += '<div class="letter-head" id="letter-' + letter + '">' + letter + '</div>';
-      lastLetter = letter;
+    if (!q) {
+      const letter = item.word.charAt(0).toUpperCase();
+      if (letter !== lastLetter) { html += '<div class="letter-head" id="letter-' + letter + '">' + letter + '</div>'; lastLetter = letter; }
     }
-    html += '<div class="card">' +
-      '<div class="card-top">' +
-        '<p class="word serif">' + escapeHtml(item.word) + '</p>' +
-        '<button class="del-btn" data-id="' + item.id + '" aria-label="Delete word">&times;</button>' +
-      '</div>' +
+    const tagsHtml = (item.tags && item.tags.length) ? '<div class="tag-pills">' + item.tags.map(tg => '<span class="tag-pill">#' + escapeHtml(tg) + '</span>').join('') + '</div>' : '';
+    html += '<div class="card ' + (item.learned ? 'is-learned' : '') + '">' +
+      '<div class="card-top"><p class="word serif">' + escapeHtml(item.word) + '</p>' +
+      '<span style="display:flex;align-items:center;">' +
+      '<button class="speak-btn" data-word="' + escapeHtml(item.word) + '">🔊</button>' +
+      '<button class="del-btn" data-id="' + item.id + '">&times;</button></span></div>' +
       '<p class="def">' + escapeHtml(item.def) + '</p>' +
+      tagsHtml +
+      '<button class="learn-toggle ' + (item.learned ? 'on' : '') + '" data-id="' + item.id + '">' + (item.learned ? t('learnedBtn') : t('markLearned')) + '</button>' +
     '</div>';
   });
   list.innerHTML = html;
 
-  list.querySelectorAll('.del-btn').forEach(btn => {
-    btn.addEventListener('click', async () => {
-      const id = btn.getAttribute('data-id');
-      words = words.filter(w => w.id !== id);
-      await persist();
-      render(document.getElementById('searchInput').value);
+  list.querySelectorAll('.speak-btn').forEach(btn => btn.addEventListener('click', () => speak(btn.getAttribute('data-word'))));
+  list.querySelectorAll('.del-btn').forEach(btn => btn.addEventListener('click', () => {
+    words = words.filter(w => w.id !== btn.getAttribute('data-id')); persist(); render(document.getElementById('searchInput').value);
+  }));
+  list.querySelectorAll('.learn-toggle').forEach(btn => btn.addEventListener('click', () => {
+    const w = words.find(w => w.id === btn.getAttribute('data-id'));
+    if (w) { const wasLearned = w.learned; w.learned = !w.learned; persist(); if (!wasLearned && w.learned) logLearnedToday(); }
+    render(document.getElementById('searchInput').value);
+  }));
+}
+
+document.getElementById('searchInput').addEventListener('input', (e) => render(e.target.value));
+
+document.getElementById('saveBtn').addEventListener('click', () => {
+  const wordInput = document.getElementById('newWord');
+  const defInput = document.getElementById('newDef');
+  const tagsInput = document.getElementById('newTags');
+  const msg = document.getElementById('lookupMsg');
+  const word = wordInput.value.trim();
+  const def = defInput.value.trim();
+  const tags = tagsInput.value.split(',').map(s => s.trim().toLowerCase()).filter(Boolean);
+  if (!word || !def) { msg.textContent = t('fillBoth'); msg.className = 'lookup-msg err'; return; }
+  words.push({ id: uid(), word, def, learned: false, tags });
+  persist();
+  wordInput.value = ''; defInput.value = ''; tagsInput.value = ''; msg.textContent = t('saved'); msg.className = 'lookup-msg';
+  render(document.getElementById('searchInput').value);
+});
+
+/* ---------------- Export / Import ---------------- */
+document.getElementById('exportBtn').addEventListener('click', () => {
+  const blob = new Blob([JSON.stringify(words, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = 'lexicon-' + currentProfile + '.json';
+  a.click();
+  URL.revokeObjectURL(url);
+});
+document.getElementById('importFile').addEventListener('change', (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    try {
+      const imported = JSON.parse(reader.result);
+      if (Array.isArray(imported)) {
+        imported.forEach(w => { if (w.word && w.def) words.push({ id: uid(), word: w.word, def: w.def, learned: !!w.learned, tags: w.tags || [] }); });
+        persist();
+        render(document.getElementById('searchInput').value);
+        alert(t('importedMsg'));
+      }
+    } catch (err) { alert('Invalid file'); }
+    e.target.value = '';
+  };
+  reader.readAsText(file);
+});
+
+document.getElementById('subFlashBtn').addEventListener('click', () => {
+  document.getElementById('subFlashBtn').classList.add('active');
+  document.getElementById('subQuizBtn').classList.remove('active');
+  document.getElementById('practiceWrap').style.display = 'block';
+  document.getElementById('quizWrap').style.display = 'none';
+});
+document.getElementById('subQuizBtn').addEventListener('click', () => {
+  document.getElementById('subQuizBtn').classList.add('active');
+  document.getElementById('subFlashBtn').classList.remove('active');
+  document.getElementById('practiceWrap').style.display = 'none';
+  document.getElementById('quizWrap').style.display = 'block';
+  startQuiz();
+});
+
+/* ---------------- Practice (flashcards) ---------------- */
+function buildPracticeQueue() {
+  practiceQueue = words.filter(w => !w.learned).sort(() => Math.random() - 0.5);
+  practiceIndex = 0; practiceRevealed = false;
+}
+
+function renderPractice() {
+  const wrap = document.getElementById('practiceWrap');
+  if (!wrap) return;
+  if (practiceQueue.length === 0) { wrap.innerHTML = '<div class="practice-done">' + t('allCaughtUp') + '</div>'; return; }
+  if (practiceIndex >= practiceQueue.length) {
+    wrap.innerHTML = '<div class="practice-done">' + t('roundFinished') + '<br><br><button class="btn-ghost" id="restartPractice" style="max-width:220px;">' + t('goAgain') + '</button></div>';
+    document.getElementById('restartPractice').addEventListener('click', () => { buildPracticeQueue(); renderPractice(); });
+    return;
+  }
+  const item = practiceQueue[practiceIndex];
+  wrap.innerHTML =
+    '<div class="flash-progress">' + (practiceIndex + 1) + ' / ' + practiceQueue.length + '</div>' +
+    '<div class="flashcard" id="flashcard">' +
+      '<div class="flash-word serif">' + escapeHtml(item.word) + ' <button class="speak-btn" id="flashSpeak" style="font-size:18px;">🔊</button></div>' +
+      (practiceRevealed ? '<div class="flash-def">' + escapeHtml(item.def) + '</div>' : '<div class="flash-hint">' + t('tapToReveal') + '</div>') +
+    '</div>' +
+    '<div class="flash-actions"><button class="btn-again">' + t('stillLearning') + '</button><button class="btn-got-it">' + t('gotIt') + '</button></div>';
+  document.getElementById('flashcard').addEventListener('click', (e) => { if (e.target.id !== 'flashSpeak') { practiceRevealed = true; renderPractice(); } });
+  document.getElementById('flashSpeak').addEventListener('click', (e) => { e.stopPropagation(); speak(item.word); });
+  wrap.querySelector('.btn-again').addEventListener('click', (e) => { e.stopPropagation(); nextCard(false); });
+  wrap.querySelector('.btn-got-it').addEventListener('click', (e) => { e.stopPropagation(); nextCard(true); });
+}
+
+function nextCard(gotIt) {
+  const item = practiceQueue[practiceIndex];
+  if (gotIt) { item.learned = true; persist(); logLearnedToday(); render(document.getElementById('searchInput').value); }
+  practiceIndex++; practiceRevealed = false; renderPractice();
+}
+
+/* ---------------- Quiz ---------------- */
+let quizItems = []; let quizIndex = 0; let quizScore = 0; let quizAnswered = false;
+
+function startQuiz() {
+  const wrap = document.getElementById('quizWrap');
+  if (words.length < 4) { wrap.innerHTML = '<div class="practice-done">' + t('quizNeedMore') + '</div>'; return; }
+  quizItems = [...words].sort(() => Math.random() - 0.5).slice(0, Math.min(10, words.length));
+  quizIndex = 0; quizScore = 0; quizAnswered = false;
+  renderQuiz();
+}
+
+function renderQuiz() {
+  const wrap = document.getElementById('quizWrap');
+  if (quizIndex >= quizItems.length) {
+    wrap.innerHTML = '<div class="quiz-score">' + t('quizScore') + ': <span class="big">' + quizScore + '/' + quizItems.length + '</span><br><br><button class="btn-ghost" id="quizAgainBtn" style="max-width:220px;">' + t('quizAgain') + '</button></div>';
+    document.getElementById('quizAgainBtn').addEventListener('click', startQuiz);
+    return;
+  }
+  const item = quizItems[quizIndex];
+  const wrongPool = words.filter(w => w.id !== item.id);
+  const wrongs = [...wrongPool].sort(() => Math.random() - 0.5).slice(0, 3);
+  const options = [...wrongs.map(w => w.def), item.def].sort(() => Math.random() - 0.5);
+  quizAnswered = false;
+
+  wrap.innerHTML =
+    '<div class="quiz-progress">' + (quizIndex + 1) + ' / ' + quizItems.length + '</div>' +
+    '<div class="quiz-word serif">' + escapeHtml(item.word) + '</div>' +
+    '<div class="quiz-options">' + options.map(opt => '<button class="quiz-opt" data-correct="' + (opt === item.def ? '1' : '0') + '">' + escapeHtml(opt) + '</button>').join('') + '</div>';
+
+  wrap.querySelectorAll('.quiz-opt').forEach(btn => {
+    btn.addEventListener('click', () => {
+      if (quizAnswered) return;
+      quizAnswered = true;
+      const correct = btn.getAttribute('data-correct') === '1';
+      if (correct) { quizScore++; item.learned = true; persist(); logLearnedToday(); render(document.getElementById('searchInput').value); }
+      wrap.querySelectorAll('.quiz-opt').forEach(b => {
+        if (b.getAttribute('data-correct') === '1') b.classList.add('correct');
+        else if (b === btn) b.classList.add('wrong');
+      });
+      setTimeout(() => { quizIndex++; renderQuiz(); }, 900);
     });
   });
 }
 
-document.getElementById('searchInput').addEventListener('input', (e) => {
-  render(e.target.value);
-});
+/* ---------------- Boot ---------------- */
+(function boot() {
+  applyTheme(localStorage.getItem('lexicon-theme') || 'dark');
+  const savedVolume = localStorage.getItem('lexicon-volume');
+  const vol = savedVolume !== null ? parseInt(savedVolume) : 35;
+  document.getElementById('volumeSlider').value = vol;
+  bgMusic.volume = vol / 100;
+  applyMusicState(localStorage.getItem('lexicon-music') === 'on');
 
-async function lookupDefinition(word) {
-  const res = await fetch('https://api.dictionaryapi.dev/api/v2/entries/en/' + encodeURIComponent(word.trim()));
-  if (!res.ok) throw new Error('not found');
-  const data = await res.json();
-  const meanings = data[0] && data[0].meanings ? data[0].meanings : [];
-  for (const m of meanings) {
-    const d = m.definitions && m.definitions[0] && m.definitions[0].definition;
-    if (d) return m.partOfSpeech ? '(' + m.partOfSpeech + ') ' + d : d;
-  }
-  throw new Error('no definition found');
-}
-
-document.getElementById('lookupBtn').addEventListener('click', async () => {
-  const wordInput = document.getElementById('newWord');
-  const defInput = document.getElementById('newDef');
-  const msg = document.getElementById('lookupMsg');
-  const word = wordInput.value.trim();
-  if (!word) { msg.textContent = 'Type a word first.'; msg.className = 'lookup-msg err'; return; }
-
-  msg.innerHTML = '<span class="spin"></span>Looking it up...';
-  msg.className = 'lookup-msg';
-
-  try {
-    const def = await lookupDefinition(word);
-    defInput.value = def;
-    msg.textContent = 'Found it. Feel free to edit before saving.';
-    msg.className = 'lookup-msg ok';
-  } catch (e) {
-    msg.textContent = "Couldn't find that automatically — this often happens with phrases. Type your own definition below.";
-    msg.className = 'lookup-msg err';
-    defInput.focus();
-  }
-});
-
-document.getElementById('saveBtn').addEventListener('click', async () => {
-  const wordInput = document.getElementById('newWord');
-  const defInput = document.getElementById('newDef');
-  const msg = document.getElementById('lookupMsg');
-  const word = wordInput.value.trim();
-  const def = defInput.value.trim();
-  if (!word || !def) {
-    msg.textContent = 'Add a word and a definition before saving.';
-    msg.className = 'lookup-msg err';
-    return;
-  }
-
-  words.push({ id: uid(), word, def });
-  await persist();
-
-  wordInput.value = '';
-  defInput.value = '';
-  msg.textContent = 'Saved.';
-  msg.className = 'lookup-msg ok';
-
-  render(document.getElementById('searchInput').value);
-});
-
-loadWords();
+  const saved = localStorage.getItem('lexicon-current');
+  if (saved && getProfiles().includes(saved)) { currentProfile = saved; startApp(); }
+  else { renderGate(); applyI18n(); }
+})();
 </script>
 </body>
 </html>
