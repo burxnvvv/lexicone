@@ -140,29 +140,6 @@
   .seg button.active { background: var(--accent); color: var(--accent-ink); }
   select { width: auto; padding: 8px 12px; font-size: 13px; }
   input[type=range] {
-
-  .lang-dropdown { position: relative; }
-  .lang-current {
-    display: flex; align-items: center; gap: 8px; background: var(--bg); border: 1px solid var(--border);
-    border-radius: 9px; padding: 8px 12px; font-size: 13px; color: var(--text);
-  }
-  .lang-current .chevron { transition: transform .25s ease; color: var(--text-dim); }
-  .lang-current.open .chevron { transform: rotate(180deg); }
-  .lang-menu {
-    position: fixed; min-width: 150px;
-    background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.4); padding: 6px; z-index: 100;
-    opacity: 0; transform: translateY(-6px) scale(0.97); pointer-events: none;
-    transition: opacity .18s ease, transform .18s cubic-bezier(0.34,1.4,0.5,1);
-  }
-  .lang-menu.open { opacity: 1; transform: translateY(0) scale(1); pointer-events: auto; }
-  .lang-menu button {
-    display: block; width: 100%; text-align: left; background: none; border: none;
-    color: var(--text); font-size: 13.5px; padding: 9px 10px; border-radius: 8px;
-  }
-  .lang-menu button:active { background: var(--surface2); }
-  .lang-menu button.selected { color: var(--accent); font-weight: 600; }
-
     width: 140px; height: 28px; accent-color: var(--accent);
     -webkit-appearance: none; appearance: none; background: transparent; touch-action: none;
   }
@@ -361,18 +338,12 @@
           <button data-v="light" id="themeLightBtn">☀️</button>
         </div>
       </div>
-      <div class="setting-row" style="position:relative;">
+      <div class="setting-row">
         <div><div class="setting-label" id="lblLanguage">Language</div></div>
-        <div class="lang-dropdown">
-          <button type="button" class="lang-current" id="langCurrentBtn">
-            <span id="langCurrentLabel">Русский</span>
-            <svg class="chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
-          </button>
-          <div class="lang-menu" id="langMenu">
-            <button type="button" data-lang="ru">Русский</button>
-            <button type="button" data-lang="uz">O'zbekcha</button>
-            <button type="button" data-lang="en">English</button>
-          </div>
+        <div class="seg" id="langSeg">
+          <button type="button" data-lang="ru">RU</button>
+          <button type="button" data-lang="uz">UZ</button>
+          <button type="button" data-lang="en">EN</button>
         </div>
       </div>
       <div class="setting-row">
@@ -708,36 +679,18 @@ function applyI18n() {
   renderPractice();
 }
 
-const LANG_LABELS = { ru: 'Русский', uz: "O'zbekcha", en: 'English' };
 function updateLangDisplay() {
-  document.getElementById('langCurrentLabel').textContent = LANG_LABELS[lang];
-  document.querySelectorAll('.lang-menu button').forEach(btn => {
-    btn.classList.toggle('selected', btn.getAttribute('data-lang') === lang);
+  document.querySelectorAll('#langSeg button').forEach(btn => {
+    btn.classList.toggle('active', btn.getAttribute('data-lang') === lang);
   });
 }
-const langCurrentBtn = document.getElementById('langCurrentBtn');
-const langMenu = document.getElementById('langMenu');
-langCurrentBtn.addEventListener('click', (e) => {
-  e.stopPropagation();
-  const willOpen = !langMenu.classList.contains('open');
-  if (willOpen) {
-    const rect = langCurrentBtn.getBoundingClientRect();
-    langMenu.style.top = (rect.bottom + 6) + 'px';
-    langMenu.style.left = Math.max(8, rect.right - 150) + 'px';
-  }
-  langMenu.classList.toggle('open', willOpen);
-  langCurrentBtn.classList.toggle('open', willOpen);
-});
-document.querySelectorAll('.lang-menu button').forEach(btn => {
+document.querySelectorAll('#langSeg button').forEach(btn => {
   btn.addEventListener('click', () => {
     lang = btn.getAttribute('data-lang');
     localStorage.setItem('lexicon-lang', lang);
-    langMenu.classList.remove('open');
-    langCurrentBtn.classList.remove('open');
     applyI18n();
   });
 });
-document.addEventListener('click', () => { langMenu.classList.remove('open'); langCurrentBtn.classList.remove('open'); });
 
 /* ---------------- Theme ---------------- */
 function applyTheme(theme) {
