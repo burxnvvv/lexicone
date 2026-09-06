@@ -21,7 +21,7 @@
     --text: #2A2620; --text-dim: #6B6656; --text-faint: #948E7C;
     --accent: #B9762E; --accent-ink: #FFFFFF; --accent2: #2F8577; --danger: #B5533B;
   }
-  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; min-width: 0; }
   html, body {
     margin: 0; padding: 0; background: var(--bg); color: var(--text);
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
@@ -62,7 +62,12 @@
     display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 8px rgba(0,0,0,0.25);
   }
   .add-circle-btn:active { opacity: 0.85; transform: scale(0.96); }
-  #createProfileBtn { background: var(--accent); color: var(--accent-ink); border: none; border-radius: 10px; padding: 0 18px; font-size: 14px; font-weight: 600; }
+  #createProfileBtn {
+    background: var(--accent); color: var(--accent-ink); border: none; border-radius: 10px;
+    padding: 0 22px; height: 44px; font-size: 14px; font-weight: 700; letter-spacing: 0.2px;
+    box-shadow: 0 6px 16px rgba(227,168,87,0.25); transition: transform .15s ease, box-shadow .15s ease;
+  }
+  #createProfileBtn:active { transform: scale(0.96); box-shadow: 0 2px 8px rgba(227,168,87,0.2); }
 
   /* ---------- App shell ---------- */
   #app { display: none; }
@@ -162,8 +167,8 @@
   }
   .nav-btn {
     flex: 1; background: none; border: none; display: flex; flex-direction: column; align-items: center; gap: 2px;
-    color: var(--text-faint); font-size: 10.5px; padding: 6px 0 2px; position: relative;
-    transition: color .25s ease;
+    color: var(--text-faint); font-size: 10px; padding: 4px 2px 2px; position: relative;
+    transition: color .25s ease; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
   }
   .nav-icon-wrap {
     width: 40px; height: 26px; display: flex; align-items: center; justify-content: center;
