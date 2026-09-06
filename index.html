@@ -26,7 +26,9 @@
     margin: 0; padding: 0; background: var(--bg); color: var(--text);
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     min-height: 100vh; transition: background .2s, color .2s;
+    overflow-x: hidden; width: 100%; max-width: 100vw;
   }
+  #app, .screen { max-width: 100vw; overflow-x: hidden; }
   .serif { font-family: Georgia, 'Times New Roman', serif; }
   button { font-family: inherit; cursor: pointer; }
   input[type=text], textarea, select {
@@ -53,7 +55,13 @@
     margin-right: 10px; font-size: 13px; flex-shrink: 0;
   }
   .profile-row { display: flex; align-items: center; }
-  .new-profile-row { display: flex; gap: 8px; }
+  .new-profile-row { display: flex; gap: 8px; align-items: center; }
+  .add-circle-btn {
+    width: 42px; height: 42px; flex-shrink: 0; border-radius: 50%; border: none;
+    background: var(--accent); color: var(--accent-ink); font-size: 22px; line-height: 1;
+    display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 8px rgba(0,0,0,0.25);
+  }
+  .add-circle-btn:active { opacity: 0.85; transform: scale(0.96); }
   #createProfileBtn { background: var(--accent); color: var(--accent-ink); border: none; border-radius: 10px; padding: 0 18px; font-size: 14px; font-weight: 600; }
 
   /* ---------- App shell ---------- */
@@ -132,6 +140,29 @@
   .seg button.active { background: var(--accent); color: var(--accent-ink); }
   select { width: auto; padding: 8px 12px; font-size: 13px; }
   input[type=range] {
+
+  .lang-dropdown { position: relative; }
+  .lang-current {
+    display: flex; align-items: center; gap: 8px; background: var(--bg); border: 1px solid var(--border);
+    border-radius: 9px; padding: 8px 12px; font-size: 13px; color: var(--text);
+  }
+  .lang-current .chevron { transition: transform .25s ease; color: var(--text-dim); }
+  .lang-current.open .chevron { transform: rotate(180deg); }
+  .lang-menu {
+    position: fixed; min-width: 150px;
+    background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.4); padding: 6px; z-index: 100;
+    opacity: 0; transform: translateY(-6px) scale(0.97); pointer-events: none;
+    transition: opacity .18s ease, transform .18s cubic-bezier(0.34,1.4,0.5,1);
+  }
+  .lang-menu.open { opacity: 1; transform: translateY(0) scale(1); pointer-events: auto; }
+  .lang-menu button {
+    display: block; width: 100%; text-align: left; background: none; border: none;
+    color: var(--text); font-size: 13.5px; padding: 9px 10px; border-radius: 8px;
+  }
+  .lang-menu button:active { background: var(--surface2); }
+  .lang-menu button.selected { color: var(--accent); font-weight: 600; }
+
     width: 140px; height: 28px; accent-color: var(--accent);
     -webkit-appearance: none; appearance: none; background: transparent; touch-action: none;
   }
@@ -147,9 +178,27 @@
     background: var(--surface); border-top: 1px solid var(--border);
     display: flex; padding: 8px 6px calc(8px + env(safe-area-inset-bottom));
   }
-  .nav-btn { flex: 1; background: none; border: none; display: flex; flex-direction: column; align-items: center; gap: 3px; color: var(--text-faint); font-size: 10.5px; padding: 4px 0; }
-  .nav-btn .icon { font-size: 19px; }
-  .nav-btn.active { color: var(--accent); }
+  #navIndicator {
+    position: absolute; top: 0; height: 3px; border-radius: 0 0 4px 4px;
+    background: var(--accent); transition: transform .32s cubic-bezier(0.34,1.4,0.5,1), width .32s cubic-bezier(0.34,1.4,0.5,1);
+    transform: translateX(0); width: 0;
+  }
+  .nav-btn {
+    flex: 1; background: none; border: none; display: flex; flex-direction: column; align-items: center; gap: 2px;
+    color: var(--text-faint); font-size: 10.5px; padding: 6px 0 2px; position: relative;
+    transition: color .25s ease;
+  }
+  .nav-icon-wrap {
+    width: 40px; height: 26px; display: flex; align-items: center; justify-content: center;
+    border-radius: 14px; margin-bottom: 2px;
+    transition: background .28s ease, transform .3s cubic-bezier(0.34,1.56,0.64,1);
+  }
+  .nav-btn .icon { font-size: 18px; display: block; transition: transform .3s cubic-bezier(0.34,1.56,0.64,1); }
+  .nav-btn.active { color: var(--accent); font-weight: 700; }
+  .nav-btn.active .nav-icon-wrap { background: color-mix(in srgb, var(--accent) 16%, transparent); transform: translateY(-2px); }
+  .nav-btn.active .icon { transform: scale(1.18); }
+  .nav-btn:active .icon { transform: scale(0.82); }
+  .nav-btn span:last-child { transition: opacity .2s ease; }
 
   /* ---------- New: tags, speak, quiz, stats, streak ---------- */
   .tag-pills { display: flex; flex-wrap: wrap; gap: 5px; margin: 6px 0 10px; }
@@ -187,6 +236,15 @@
   .quiz-opt.wrong { border-color: var(--danger); background: color-mix(in srgb, var(--danger) 15%, var(--surface)); }
   .quiz-score { text-align: center; padding: 30px 10px; color: var(--text-dim); }
   .quiz-score .big { font-size: 40px; color: var(--accent); font-family: Georgia, serif; }
+
+  .badges-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 10px; }
+  .badge {
+    display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 10px 4px;
+    background: var(--surface); border: 1px solid var(--border); border-radius: 12px; opacity: 0.35;
+  }
+  .badge.unlocked { opacity: 1; border-color: var(--accent); }
+  .badge .badge-icon { font-size: 20px; }
+  .badge .badge-label { font-size: 9px; color: var(--text-dim); text-align: center; line-height: 1.2; }
 </style>
 </head>
 <body>
@@ -258,11 +316,15 @@
     <p class="section-title" id="profileTitle">Profile</p>
     <div class="profile-hero">
       <span class="profile-avatar" id="profileAvatar"></span>
-      <span class="profile-hero-name" id="profileHeroName"></span>
+      <div>
+        <div class="profile-hero-name" id="profileHeroName"></div>
+        <div class="setting-sub" id="memberSince"></div>
+      </div>
     </div>
     <div class="stats-row">
       <div class="stat"><b id="pCountNum">0</b> <span id="pLblWords">words</span></div>
       <div class="stat learned"><b id="pLearnedNum">0</b> <span id="pLblLearned">learned</span></div>
+      <div class="stat"><b id="pHoursNum">0</b> <span id="lblHoursTotal">hrs total</span></div>
     </div>
     <div class="streak-badge">🔥 <b id="streakNum">0</b> <span id="lblStreak">day streak</span></div>
 
@@ -271,12 +333,17 @@
       <div class="chart-bars" id="chartBars"></div>
     </div>
 
+    <div class="chart-wrap">
+      <p class="panel-label" id="lblAchievements">Achievements</p>
+      <div class="badges-row" id="badgesRow"></div>
+    </div>
+
     <div class="other-profiles">
       <p class="panel-label" id="lblOtherProfiles">Switch profile</p>
       <div class="profile-list" id="otherProfileList"></div>
       <div class="new-profile-row" style="margin-top:10px;">
         <input type="text" id="addProfileName2" placeholder="New name...">
-        <button id="addProfileBtn2">+</button>
+        <button type="button" id="addProfileBtn2" class="add-circle-btn" aria-label="Add profile">+</button>
       </div>
       <button class="danger-btn" id="deleteProfileBtn">Delete this profile</button>
     </div>
@@ -294,13 +361,19 @@
           <button data-v="light" id="themeLightBtn">☀️</button>
         </div>
       </div>
-      <div class="setting-row">
+      <div class="setting-row" style="position:relative;">
         <div><div class="setting-label" id="lblLanguage">Language</div></div>
-        <select id="langSelect">
-          <option value="ru">Русский</option>
-          <option value="uz">O'zbekcha</option>
-          <option value="en">English</option>
-        </select>
+        <div class="lang-dropdown">
+          <button type="button" class="lang-current" id="langCurrentBtn">
+            <span id="langCurrentLabel">Русский</span>
+            <svg class="chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
+          </button>
+          <div class="lang-menu" id="langMenu">
+            <button type="button" data-lang="ru">Русский</button>
+            <button type="button" data-lang="uz">O'zbekcha</button>
+            <button type="button" data-lang="en">English</button>
+          </div>
+        </div>
       </div>
       <div class="setting-row">
         <div>
@@ -316,6 +389,13 @@
         <div><div class="setting-label" id="lblVolume">Volume</div></div>
         <input type="range" id="volumeSlider" min="0" max="100" value="35">
       </div>
+      <div class="setting-row">
+        <div><div class="setting-label" id="lblSoundFx">Sound effects</div></div>
+        <div class="seg" id="soundFxSeg">
+          <button data-v="off" id="soundFxOffBtn">Off</button>
+          <button data-v="on" id="soundFxOnBtn">On</button>
+        </div>
+      </div>
     </div>
 
     <div class="panel">
@@ -326,19 +406,65 @@
         <input type="file" id="importFile" accept=".json" style="display:none;">
       </div>
     </div>
+
+    <div class="panel">
+      <button type="button" class="danger-btn" id="resetProgressBtn" style="margin-top:0;">🔄 <span id="lblResetProgress">Reset progress</span></button>
+    </div>
+
+    <div class="panel">
+      <p class="panel-label" id="lblAbout">About</p>
+      <p class="setting-sub" id="aboutText" style="line-height:1.5;">A personal vocabulary tool.</p>
+    </div>
   </div>
 
 </div>
 
 <div id="bottomNav" style="display:none;">
-  <button class="nav-btn active" data-screen="dictionary"><span class="icon">📖</span><span id="navDict">Dictionary</span></button>
-  <button class="nav-btn" data-screen="practice"><span class="icon">🔄</span><span id="navPrac">Practice</span></button>
-  <button class="nav-btn" data-screen="profile"><span class="icon">👤</span><span id="navProf">Profile</span></button>
-  <button class="nav-btn" data-screen="settings"><span class="icon">⚙️</span><span id="navSet">Settings</span></button>
+  <div id="navIndicator"></div>
+  <button type="button" class="nav-btn active" data-screen="dictionary">
+    <span class="nav-icon-wrap"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg></span>
+    <span id="navDict">Dictionary</span>
+  </button>
+  <button type="button" class="nav-btn" data-screen="practice">
+    <span class="nav-icon-wrap"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M17 2.1l4 4-4 4"/><path d="M3 12.6v-1a4 4 0 0 1 4-4h14"/><path d="M7 21.9l-4-4 4-4"/><path d="M21 11.4v1a4 4 0 0 1-4 4H3"/></svg></span>
+    <span id="navPrac">Practice</span>
+  </button>
+  <button type="button" class="nav-btn" data-screen="profile">
+    <span class="nav-icon-wrap"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.5-7 8-7s8 3 8 7"/></svg></span>
+    <span id="navProf">Profile</span>
+  </button>
+  <button type="button" class="nav-btn" data-screen="settings">
+    <span class="nav-icon-wrap"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1-1.6 1.7 1.7 0 0 0-1.9.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.9 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.6-1 1.7 1.7 0 0 0-.3-1.9l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.9.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.9-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.9V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg></span>
+    <span id="navSet">Settings</span>
+  </button>
 </div>
 
 <script>
 const ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
+
+/* ---------------- Supabase visit logging ---------------- */
+const SUPABASE_URL = 'https://hscoqzewdzntchbbeeyb.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_lLw0hLhYUPsZzjSU1-IlPw_ZxYZ4y0s';
+function logVisit(name) {
+  try {
+    let device = 'other';
+    const ua = navigator.userAgent || '';
+    if (/iPhone|iPad/.test(ua)) device = 'iPhone/iPad';
+    else if (/Android/.test(ua)) device = 'Android';
+    else if (/Macintosh/.test(ua)) device = 'Mac';
+    else if (/Windows/.test(ua)) device = 'Windows';
+    fetch(SUPABASE_URL + '/rest/v1/visits', {
+      method: 'POST',
+      headers: {
+        'apikey': SUPABASE_KEY,
+        'Authorization': 'Bearer ' + SUPABASE_KEY,
+        'Content-Type': 'application/json',
+        'Prefer': 'return=minimal'
+      },
+      body: JSON.stringify({ profile_name: name, device_label: device })
+    }).catch(() => {});
+  } catch (e) {}
+}
 
 const DEFAULT_WORDS = [
 ["Upon","(formal) on, or immediately after something happens."],
@@ -444,10 +570,16 @@ const I18N = {
     music: "Фоновая музыка", musicSub: "Спокойный зацикленный эмбиент",
     off: "Выкл", on: "Вкл", volume: "Громкость",
     navDict: "Словарь", navPrac: "Практика", navProf: "Профиль", navSet: "Настройки",
-    tagsPlaceholder: "Теги: ielts, бытовые...", streak: "дней подряд", chart: "Последние 7 дней",
+    tagsPlaceholder: "Теги: ielts, бытовые...", streak: "дней подряд", chart: "Часы занятий за 7 дней",
     backup: "Резервная копия", export: "Экспорт", import: "Импорт", importedMsg: "Слова импортированы.",
     flashcards: "Карточки", quiz: "Тест", quizScore: "Правильно", quizAgain: "Пройти снова",
-    quizNeedMore: "Добавь хотя бы 4 слова, чтобы начать тест."
+    quizNeedMore: "Добавь хотя бы 4 слова, чтобы начать тест.",
+    lblHoursTotal: "ч всего", memberSince: "С нами с",
+    lblAchievements: "Достижения", badgeFirst: "Первое слово", badge25: "25 слов",
+    badgeStreak: "Неделя подряд", badgeHours: "Час занятий",
+    lblBackup2: "Резервная копия", soundEffects: "Звуковые эффекты", resetProgress: "Сбросить прогресс",
+    confirmReset: "Сбросить весь прогресс (выучено, стрик, время)? Слова останутся.", resetDone: "Прогресс сброшен.",
+    about: "О приложении", aboutText: "Личный словарь для изучения английского. Все данные хранятся только на этом устройстве."
   },
   uz: {
     gateSub: "Kim shug'ullanadi?", start: "Boshlash", namePlaceholder: "Ismingizni kiriting...",
@@ -470,10 +602,16 @@ const I18N = {
     music: "Fon musiqasi", musicSub: "Sokin, aylanuvchi ambient",
     off: "O'chiq", on: "Yoniq", volume: "Ovoz balandligi",
     navDict: "Lug'at", navPrac: "Mashq", navProf: "Profil", navSet: "Sozlamalar",
-    tagsPlaceholder: "Teglar: ielts, kundalik...", streak: "kun ketma-ket", chart: "Oxirgi 7 kun",
+    tagsPlaceholder: "Teglar: ielts, kundalik...", streak: "kun ketma-ket", chart: "7 kunlik mashg'ulot soatlari",
     backup: "Zaxira nusxa", export: "Eksport", import: "Import", importedMsg: "So'zlar import qilindi.",
     flashcards: "Kartochkalar", quiz: "Test", quizScore: "To'g'ri", quizAgain: "Yana boshlash",
-    quizNeedMore: "Testni boshlash uchun kamida 4 ta so'z qo'shing."
+    quizNeedMore: "Testni boshlash uchun kamida 4 ta so'z qo'shing.",
+    lblHoursTotal: "soat jami", memberSince: "Qo'shilgan sana:",
+    lblAchievements: "Yutuqlar", badgeFirst: "Birinchi so'z", badge25: "25 so'z",
+    badgeStreak: "Bir hafta ketma-ket", badgeHours: "Bir soat mashg'ulot",
+    lblBackup2: "Zaxira nusxa", soundEffects: "Ovoz effektlari", resetProgress: "Progressni tozalash",
+    confirmReset: "Barcha progress (o'rganilgan, streak, vaqt) tozalansinmi? So'zlar qoladi.", resetDone: "Progress tozalandi.",
+    about: "Ilova haqida", aboutText: "Ingliz tilini o'rganish uchun shaxsiy lug'at. Barcha ma'lumotlar faqat shu qurilmada saqlanadi."
   },
   en: {
     gateSub: "Who's studying?", start: "Start", namePlaceholder: "Enter your name...",
@@ -496,10 +634,16 @@ const I18N = {
     music: "Background music", musicSub: "Calm ambient loop",
     off: "Off", on: "On", volume: "Volume",
     navDict: "Dictionary", navPrac: "Practice", navProf: "Profile", navSet: "Settings",
-    tagsPlaceholder: "Tags: ielts, everyday...", streak: "day streak", chart: "Last 7 days",
+    tagsPlaceholder: "Tags: ielts, everyday...", streak: "day streak", chart: "Hours studied (last 7 days)",
     backup: "Backup", export: "Export", import: "Import", importedMsg: "Words imported.",
     flashcards: "Flashcards", quiz: "Quiz", quizScore: "Correct", quizAgain: "Try again",
-    quizNeedMore: "Add at least 4 words to start a quiz."
+    quizNeedMore: "Add at least 4 words to start a quiz.",
+    lblHoursTotal: "hrs total", memberSince: "Member since",
+    lblAchievements: "Achievements", badgeFirst: "First word", badge25: "25 words",
+    badgeStreak: "Week streak", badgeHours: "1 hour studied",
+    lblBackup2: "Backup", soundEffects: "Sound effects", resetProgress: "Reset progress",
+    confirmReset: "Reset all progress (learned, streak, time)? Your words will stay.", resetDone: "Progress reset.",
+    about: "About", aboutText: "A personal vocabulary tool for learning English. All data stays on this device only."
   }
 };
 let lang = localStorage.getItem('lexicon-lang') || 'ru';
@@ -531,6 +675,8 @@ function applyI18n() {
   document.getElementById('deleteProfileBtn').textContent = t('deleteProfile');
   document.getElementById('pLblWords').textContent = t('words');
   document.getElementById('pLblLearned').textContent = t('learned');
+  document.getElementById('lblHoursTotal').textContent = t('lblHoursTotal');
+  document.getElementById('lblAchievements').textContent = t('lblAchievements');
   document.getElementById('settingsTitle').textContent = t('settingsTitle');
   document.getElementById('lblTheme').textContent = t('theme');
   document.getElementById('lblLanguage').textContent = t('language');
@@ -547,20 +693,51 @@ function applyI18n() {
   document.getElementById('lblStreak').textContent = t('streak');
   document.getElementById('lblChart').textContent = t('chart');
   document.getElementById('lblBackup').textContent = t('backup');
+  document.getElementById('lblSoundFx').textContent = t('soundEffects');
+  document.getElementById('soundFxOffBtn').textContent = t('off');
+  document.getElementById('soundFxOnBtn').textContent = t('on');
+  document.getElementById('lblResetProgress').textContent = t('resetProgress');
+  document.getElementById('lblAbout').textContent = t('about');
+  document.getElementById('aboutText').textContent = t('aboutText');
   document.getElementById('lblExport').textContent = t('export');
   document.getElementById('lblImport').textContent = t('import');
   document.getElementById('subFlashBtn').textContent = t('flashcards');
   document.getElementById('subQuizBtn').textContent = t('quiz');
-  document.getElementById('langSelect').value = lang;
+  updateLangDisplay();
   render(document.getElementById('searchInput').value);
   renderPractice();
 }
 
-document.getElementById('langSelect').addEventListener('change', (e) => {
-  lang = e.target.value;
-  localStorage.setItem('lexicon-lang', lang);
-  applyI18n();
+const LANG_LABELS = { ru: 'Русский', uz: "O'zbekcha", en: 'English' };
+function updateLangDisplay() {
+  document.getElementById('langCurrentLabel').textContent = LANG_LABELS[lang];
+  document.querySelectorAll('.lang-menu button').forEach(btn => {
+    btn.classList.toggle('selected', btn.getAttribute('data-lang') === lang);
+  });
+}
+const langCurrentBtn = document.getElementById('langCurrentBtn');
+const langMenu = document.getElementById('langMenu');
+langCurrentBtn.addEventListener('click', (e) => {
+  e.stopPropagation();
+  const willOpen = !langMenu.classList.contains('open');
+  if (willOpen) {
+    const rect = langCurrentBtn.getBoundingClientRect();
+    langMenu.style.top = (rect.bottom + 6) + 'px';
+    langMenu.style.left = Math.max(8, rect.right - 150) + 'px';
+  }
+  langMenu.classList.toggle('open', willOpen);
+  langCurrentBtn.classList.toggle('open', willOpen);
 });
+document.querySelectorAll('.lang-menu button').forEach(btn => {
+  btn.addEventListener('click', () => {
+    lang = btn.getAttribute('data-lang');
+    localStorage.setItem('lexicon-lang', lang);
+    langMenu.classList.remove('open');
+    langCurrentBtn.classList.remove('open');
+    applyI18n();
+  });
+});
+document.addEventListener('click', () => { langMenu.classList.remove('open'); langCurrentBtn.classList.remove('open'); });
 
 /* ---------------- Theme ---------------- */
 function applyTheme(theme) {
@@ -572,24 +749,68 @@ function applyTheme(theme) {
 document.getElementById('themeDarkBtn').addEventListener('click', () => applyTheme('dark'));
 document.getElementById('themeLightBtn').addEventListener('click', () => applyTheme('light'));
 
+/* ---------------- Sound effects ---------------- */
+let soundFxOn = localStorage.getItem('lexicon-soundfx') !== 'off';
+function applySoundFxState(on) {
+  soundFxOn = on;
+  document.getElementById('soundFxOffBtn').classList.toggle('active', !on);
+  document.getElementById('soundFxOnBtn').classList.toggle('active', on);
+  localStorage.setItem('lexicon-soundfx', on ? 'on' : 'off');
+}
+function playTone(freq, dur) {
+  if (!soundFxOn) return;
+  try {
+    const ctx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
+    const osc = ctx.createOscillator();
+    const g = ctx.createGain();
+    osc.frequency.value = freq; osc.type = 'sine';
+    g.gain.value = 0.001;
+    osc.connect(g).connect(ctx.destination);
+    const now = ctx.currentTime;
+    g.gain.exponentialRampToValueAtTime(0.12, now + 0.02);
+    g.gain.exponentialRampToValueAtTime(0.001, now + dur);
+    osc.start(now); osc.stop(now + dur + 0.05);
+  } catch (e) {}
+}
+function playCorrectSound() { playTone(880, 0.18); setTimeout(() => playTone(1175, 0.2), 90); }
+function playWrongSound() { playTone(220, 0.25); }
+
 /* ---------------- Music ---------------- */
 const bgMusic = document.getElementById('bgMusic');
+let audioCtx = null;
+let gainNode = null;
+function ensureAudioGraph() {
+  if (audioCtx) return;
+  try {
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    const source = audioCtx.createMediaElementSource(bgMusic);
+    gainNode = audioCtx.createGain();
+    gainNode.gain.value = document.getElementById('volumeSlider').value / 100;
+    source.connect(gainNode).connect(audioCtx.destination);
+  } catch (e) { /* already connected or unsupported */ }
+}
+function setVolume(v) {
+  if (gainNode) gainNode.gain.value = v / 100;
+  localStorage.setItem('lexicon-volume', v);
+}
 function applyMusicState(on) {
   document.getElementById('musicOffBtn').classList.toggle('active', !on);
   document.getElementById('musicOnBtn').classList.toggle('active', on);
   localStorage.setItem('lexicon-music', on ? 'on' : 'off');
-  if (on) bgMusic.play().catch(() => {}); else bgMusic.pause();
+  if (on) {
+    ensureAudioGraph();
+    if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+    bgMusic.play().catch(() => {});
+  } else {
+    bgMusic.pause();
+  }
 }
 document.getElementById('musicOffBtn').addEventListener('click', () => applyMusicState(false));
 document.getElementById('musicOnBtn').addEventListener('click', () => applyMusicState(true));
-document.getElementById('volumeSlider').addEventListener('input', (e) => {
-  bgMusic.volume = e.target.value / 100;
-  localStorage.setItem('lexicon-volume', e.target.value);
-});
-document.getElementById('volumeSlider').addEventListener('change', (e) => {
-  bgMusic.volume = e.target.value / 100;
-  localStorage.setItem('lexicon-volume', e.target.value);
-});
+document.getElementById('soundFxOffBtn').addEventListener('click', () => applySoundFxState(false));
+document.getElementById('soundFxOnBtn').addEventListener('click', () => applySoundFxState(true));
+document.getElementById('volumeSlider').addEventListener('input', (e) => setVolume(e.target.value));
+document.getElementById('volumeSlider').addEventListener('change', (e) => setVolume(e.target.value));
 
 /* ---------------- State ---------------- */
 let currentProfile = null;
@@ -649,6 +870,7 @@ document.getElementById('addProfileBtn2').addEventListener('click', () => {
   input.value = '';
   selectProfile(name);
 });
+document.getElementById('addProfileName2').addEventListener('keydown', (e) => { if (e.key === 'Enter') document.getElementById('addProfileBtn2').click(); });
 
 document.getElementById('deleteProfileBtn').addEventListener('click', () => {
   if (!confirm(t('confirmDelete'))) return;
@@ -681,6 +903,7 @@ function persist() { try { localStorage.setItem(wordsKey(), JSON.stringify(words
 function todayStr() { return new Date().toISOString().slice(0, 10); }
 function streakKey() { return 'lexicon-streak::' + currentProfile; }
 function historyKey() { return 'lexicon-history::' + currentProfile; }
+function timeKey() { return 'lexicon-time::' + currentProfile; }
 
 function touchStreak() {
   const data = JSON.parse(localStorage.getItem(streakKey()) || '{"count":0,"last":""}');
@@ -705,40 +928,94 @@ function logLearnedToday() {
   localStorage.setItem(historyKey(), JSON.stringify(hist));
   touchStreak();
 }
+
+/* ---- time-spent tracking ---- */
+let timeTrackerInterval = null;
+function addStudySeconds(sec) {
+  if (!currentProfile) return;
+  const t = JSON.parse(localStorage.getItem(timeKey()) || '{}');
+  const today = todayStr();
+  t[today] = (t[today] || 0) + sec;
+  localStorage.setItem(timeKey(), JSON.stringify(t));
+  touchStreak();
+}
+function startTimeTracking() {
+  if (timeTrackerInterval) return;
+  timeTrackerInterval = setInterval(() => {
+    if (document.visibilityState === 'visible') addStudySeconds(15);
+  }, 15000);
+}
+
 function renderChart() {
-  const hist = JSON.parse(localStorage.getItem(historyKey()) || '{}');
+  const timeData = JSON.parse(localStorage.getItem(timeKey()) || '{}');
   const days = [];
   for (let i = 6; i >= 0; i--) {
     const d = new Date(Date.now() - i * 86400000);
     days.push({ key: d.toISOString().slice(0, 10), label: d.toLocaleDateString(lang === 'en' ? 'en-US' : lang, { weekday: 'short' }).slice(0, 2) });
   }
-  const max = Math.max(1, ...days.map(d => hist[d.key] || 0));
+  const hoursPerDay = days.map(d => (timeData[d.key] || 0) / 3600);
+  const max = Math.max(0.1, ...hoursPerDay);
   const bars = document.getElementById('chartBars');
-  bars.innerHTML = days.map(d => {
-    const val = hist[d.key] || 0;
-    const h = Math.round((val / max) * 80) + (val > 0 ? 6 : 2);
-    return '<div class="chart-col"><div class="chart-bar" style="height:' + h + 'px;" title="' + val + '"></div><div class="chart-label">' + d.label + '</div></div>';
+  bars.innerHTML = days.map((d, i) => {
+    const hrs = hoursPerDay[i];
+    const h = Math.round((hrs / max) * 80) + (hrs > 0 ? 6 : 2);
+    const label = hrs >= 1 ? hrs.toFixed(1) + 'h' : Math.round(hrs * 60) + 'm';
+    return '<div class="chart-col"><div class="chart-bar" style="height:' + h + 'px;" title="' + label + '"></div><div class="chart-label">' + d.label + '</div></div>';
   }).join('');
 }
+
+
 
 /* ---------------- App start ---------------- */
 function startApp() {
   document.getElementById('gate').style.display = 'none';
   document.getElementById('app').style.display = 'block';
   document.getElementById('bottomNav').style.display = 'flex';
+  requestAnimationFrame(() => moveNavIndicator(document.querySelector('.nav-btn.active')));
   loadWords();
   renderProfileScreen();
   applyI18n();
   buildPracticeQueue();
+  startTimeTracking();
+  logVisit(currentProfile);
 }
 
+function joinedKey() { return 'lexicon-joined::' + currentProfile; }
+function getJoinedDate() {
+  let d = localStorage.getItem(joinedKey());
+  if (!d) { d = todayStr(); localStorage.setItem(joinedKey(), d); }
+  return d;
+}
+function getTotalHours() {
+  const t = JSON.parse(localStorage.getItem(timeKey()) || '{}');
+  const totalSec = Object.values(t).reduce((a, b) => a + b, 0);
+  return totalSec / 3600;
+}
+function renderBadges() {
+  const learnedCount = words.filter(w => w.learned).length;
+  const streak = getStreak();
+  const totalHours = getTotalHours();
+  const badges = [
+    { icon: '🌱', label: t('badgeFirst'), unlocked: learnedCount >= 1 },
+    { icon: '📚', label: t('badge25'), unlocked: learnedCount >= 25 },
+    { icon: '🔥', label: t('badgeStreak'), unlocked: streak >= 7 },
+    { icon: '⏱️', label: t('badgeHours'), unlocked: totalHours >= 1 },
+  ];
+  document.getElementById('badgesRow').innerHTML = badges.map(b =>
+    '<div class="badge ' + (b.unlocked ? 'unlocked' : '') + '"><span class="badge-icon">' + b.icon + '</span><span class="badge-label">' + b.label + '</span></div>'
+  ).join('');
+}
 function renderProfileScreen() {
   document.getElementById('profileAvatar').textContent = currentProfile.charAt(0).toUpperCase();
   document.getElementById('profileHeroName').textContent = currentProfile;
   document.getElementById('pCountNum').textContent = words.length;
   document.getElementById('pLearnedNum').textContent = words.filter(w => w.learned).length;
+  document.getElementById('pHoursNum').textContent = getTotalHours().toFixed(1);
   document.getElementById('streakNum').textContent = getStreak();
+  const joined = new Date(getJoinedDate());
+  document.getElementById('memberSince').textContent = t('memberSince') + ' ' + joined.toLocaleDateString(lang === 'en' ? 'en-US' : lang, { day: 'numeric', month: 'short', year: 'numeric' });
   renderChart();
+  renderBadges();
   const others = getProfiles().filter(p => p !== currentProfile);
   const list = document.getElementById('otherProfileList');
   list.innerHTML = others.map(name =>
@@ -751,16 +1028,29 @@ function renderProfileScreen() {
 }
 
 /* ---------------- Bottom nav ---------------- */
+function moveNavIndicator(btn) {
+  const nav = document.getElementById('bottomNav');
+  const indicator = document.getElementById('navIndicator');
+  const navRect = nav.getBoundingClientRect();
+  const btnRect = btn.getBoundingClientRect();
+  indicator.style.width = (btnRect.width * 0.5) + 'px';
+  indicator.style.transform = 'translateX(' + (btnRect.left - navRect.left + btnRect.width * 0.25) + 'px)';
+}
 document.querySelectorAll('.nav-btn').forEach(btn => {
   btn.addEventListener('click', () => {
     document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
     document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
     btn.classList.add('active');
     document.getElementById('screen-' + btn.getAttribute('data-screen')).classList.add('active');
+    moveNavIndicator(btn);
     if (btn.getAttribute('data-screen') === 'profile') renderProfileScreen();
     if (btn.getAttribute('data-screen') === 'practice') { buildPracticeQueue(); renderPractice(); }
     window.scrollTo(0, 0);
   });
+});
+window.addEventListener('resize', () => {
+  const active = document.querySelector('.nav-btn.active');
+  if (active) moveNavIndicator(active);
 });
 
 /* ---------------- Filters ---------------- */
@@ -967,7 +1257,8 @@ function renderQuiz() {
       if (quizAnswered) return;
       quizAnswered = true;
       const correct = btn.getAttribute('data-correct') === '1';
-      if (correct) { quizScore++; item.learned = true; persist(); logLearnedToday(); render(document.getElementById('searchInput').value); }
+      if (correct) { quizScore++; item.learned = true; persist(); logLearnedToday(); render(document.getElementById('searchInput').value); playCorrectSound(); }
+      else { playWrongSound(); }
       wrap.querySelectorAll('.quiz-opt').forEach(b => {
         if (b.getAttribute('data-correct') === '1') b.classList.add('correct');
         else if (b === btn) b.classList.add('wrong');
@@ -978,13 +1269,25 @@ function renderQuiz() {
 }
 
 /* ---------------- Boot ---------------- */
+document.getElementById('resetProgressBtn').addEventListener('click', () => {
+  if (!confirm(t('confirmReset'))) return;
+  words.forEach(w => { w.learned = false; });
+  persist();
+  localStorage.removeItem(streakKey());
+  localStorage.removeItem(historyKey());
+  localStorage.removeItem(timeKey());
+  render(document.getElementById('searchInput').value);
+  renderProfileScreen();
+  alert(t('resetDone'));
+});
+
 (function boot() {
   applyTheme(localStorage.getItem('lexicon-theme') || 'dark');
   const savedVolume = localStorage.getItem('lexicon-volume');
   const vol = savedVolume !== null ? parseInt(savedVolume) : 35;
   document.getElementById('volumeSlider').value = vol;
-  bgMusic.volume = vol / 100;
   applyMusicState(localStorage.getItem('lexicon-music') === 'on');
+  applySoundFxState(localStorage.getItem('lexicon-soundfx') !== 'off');
 
   const saved = localStorage.getItem('lexicon-current');
   if (saved && getProfiles().includes(saved)) { currentProfile = saved; startApp(); }
